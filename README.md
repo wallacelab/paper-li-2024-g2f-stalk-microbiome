@@ -1,8 +1,8 @@
 2019_G2F_metadata_enviromental.tsv
-Metadata of 2019 g2f samples
+Metadata of 2019 G2F samples
 
 G2F_metadata_2019_duplicate_pedigree.txt
-Metadata of duplicate samples 
+SampleID of G2F duplicate samples 
 
 aligned-rep-seqs.qza
 representative sequence 
@@ -32,6 +32,7 @@ path_abun_unstrat_descrip.tsv
 Pathway estimation based on ASV table with only duplicated samples of YS pedigree 
 
 picrust2_workflow.sh
+command for run picrust2 on sapelo2 
 
 work_flow_redo.sh 
 Bash scripts using qiime2 to process raw data, build ASV table, and perform alpha and beta diversity analysis
