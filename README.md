@@ -1,4 +1,5 @@
 2019_G2F_metadata_enviromental.tsv
+Metadata of 2019 g2f samples
 
 G2F_metadata_2019_duplicate_pedigree.txt
 Metadata of duplicate samples 
@@ -16,13 +17,13 @@ column_name_list.txt
 Metadata column name 
 
 dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree.qza
-ASV table after filtering mitochondira, chloroplast and blank, keeping samples with duplicate 
+ASV table after filtering mitochondria, chloroplast, and blank, keeping samples with duplicate 
 
 dada2_table-no-mitochondria-no-chloroplast-blank-filtered.qza
-ASV table after filtering mitochondira, chloroplast and blank
+ASV table after filtering mitochondria, chloroplast, and blank
 
 dada2_table-no-mitochondria-no-chloroplast.qza
-ASV table after filtering mitochondira and chloroplast 
+ASV table after filtering mitochondria and chloroplast 
 
 dada2_table.qza
 orignial ASV table 
@@ -33,7 +34,7 @@ Pathway estimation based on ASV table with only duplicated samples of YS pedigre
 picrust2_workflow.sh
 
 work_flow_redo.sh 
-Bash scritps using qiime2 to process raw data, build ASV table and perform alpha and beta diversity analysis
+Bash scripts using qiime2 to process raw data, build ASV table, and perform alpha and beta diversity analysis
 
 yellow_strip_gbs_data_orinigal.tsv
-File that contain the orginial yellow stripe species name 
+File that contains the original yellow stripe species name 
