@@ -79,7 +79,9 @@ META = sample_data(metadata)
 ##build phyloseq object 
 ps	=	phyloseq(OTU,TAX,phy_tree,META)
 
+###############
+# Write out unified phyloseq object
+###############
 
-#remove NCH1-1-159 samples for m
-ps <- subset_samples(ps, rownames(sample_data(ps)) != "NCH1-1-159")
+saveRDS(ps, file="1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds")
 
