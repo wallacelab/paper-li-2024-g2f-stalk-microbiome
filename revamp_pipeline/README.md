@@ -2,6 +2,34 @@
 
 This is the workflow for Li et al. 2024's analysis of the maize stalk microbiome across the Genomes to Fields initiative. This is specifically a revamped one to be more modular and reproducible than the original one. Currently it is being stored in a subfolder to make revision easier; eventually it will be moved to the main folder.
 
+# Step 0 - ASV calling and Picrust analysis
+
+This is the basic analysis step, going from raw sequencing data to files ready to be imported into R for analysis.
+
+Importantly, these steps are not really meant to be run from a cloned repo, as they require the fastq files (which are WAY too big for Github). They are instead included so all the paramters used can be looked up (if necessary), and the key output files are included in 0_data_files
+
+**0a_qiime_workflow.sh**
+
+This script uses QIIME2 to process raw data, build ASV table, and perform alpha and beta diversity analysis.
+
+**0b_picrust2_workflow.sh**
+
+This bash script was used to run picrust2 on UGA's high-performance computing cluster, sapelo2.
+
+**0_data_files**
+
+This directory holds all the output files from the above. Subsequent scripts will load from here to access the original data.
+
+# Step 1 - Data unification and filtering
+
+
+
+# Step 2 - TODO
+
+
+# Step 3 - TODO
+
+
 
 
 **Explanation for files**
@@ -63,13 +91,8 @@ original ASV table
 Pathway estimation based on ASV table with only duplicated samples of YS pedigree 
 
 
-**picrust2_workflow.sh**
 
-command for run picrust2 on sapelo2 
 
-**work_flow_redo.sh** 
-
-Bash scripts using qiime2 to process raw data, build ASV table, and perform alpha and beta diversity analysis
 
 
 **yellow_strip_gbs_data_orinigal.tsv**
