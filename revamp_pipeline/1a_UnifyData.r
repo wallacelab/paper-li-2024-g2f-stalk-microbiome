@@ -2,7 +2,14 @@
 
 # Load in and unify the data from QIIME, doing some minor filtering/correcting along the way
 library(phyloseq)
+library(tidyverse)
+library(gridExtra)
 
+rarefy_depth=1500  # Depth to rarify samples to
+rarefy_seed=1 # Random number seed for rarefaction
+yellow_stripes = c("PHW52/PHM49","B73/PHM49","F42/H95","F42/MO17","OH43/B37","PHW52/PHN82","B14A/OH43","B14A/H95","B14A/MO17",
+                   "LH74/PHN82","PHG39/PHN82","B73/MO17","B73/PHN82","B37/H95","F42/OH43","B37/MO17","B37/OH43","CG119/CG108",
+                   "CG44/CGR01","2369/LH123HT")  # "Yellow-stripe" genotypes that are the focus of this study
 
 #############
 # Load data
@@ -76,12 +83,45 @@ OTU	=	otu_table(otu_table,taxa_are_rows	=	TRUE)
 TAX	=	tax_table(taxonomy)
 META = sample_data(metadata)
 
-##build phyloseq object 
+#build phyloseq object 
 ps	=	phyloseq(OTU,TAX,phy_tree,META)
 
+# Rarefy to specific depth using the seed value from earlier
+ps.rarefied = rarefy_even_depth(ps, sample.size=rarefy_depth, replace=F, rngseed=rarefy_seed)
+
+# Limit to just the "yellow-stripe" maize varieties
+ps.rarefied_ys_filtered <- subset_samples(ps.rarefied, Corrected_pedigree %in% yellow_stripes)
+
+
 ###############
-# Write out unified phyloseq object
+# Write out unified phyloseq objects
 ###############
 
 saveRDS(ps, file="1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds")
+saveRDS(ps.rarefied, file=paste("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy",rarefy_depth, ".phyloseq.rds", sep=""))
+saveRDS(ps.rarefied_ys_filtered, file=paste("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy",rarefy_depth, ".yellow_stripe.phyloseq.rds", sep=""))
+
+###############
+# Graph presence of genotypes in each location
+###############
+
+plot_heatmap = function(mydata){
+  toplot = sample_data(mydata) %>%
+    group_by(Corrected_pedigree, location) %>%
+    summarize(count=n(), .groups="drop")
+  myplot = ggplot(toplot) + 
+    aes(x=location,y=Corrected_pedigree, fill=count) +
+    geom_tile() +
+    theme(axis.text.x = element_text(angle=90, vjust=0.5))
+  return(myplot)
+}
+
+# Make plots
+rawplot = plot_heatmap(ps) + ggtitle("Raw data")
+rareplot = plot_heatmap(ps.rarefied) + ggtitle("Rarefied")
+ysplot = plot_heatmap(ps.rarefied_ys_filtered) + ggtitle("Rarefied + Yellow Stripe")
+
+output = grid.arrange(grobs=list(rawplot, rareplot, ysplot), nrow=1)
+ggsave(output, file="1_parsed_files/1a_genotype_by_location_heatmap.png", width=16, height=5)
+
 
