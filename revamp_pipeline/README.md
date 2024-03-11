@@ -8,21 +8,16 @@ This is the basic analysis step, going from raw sequencing data to files ready t
 
 Importantly, these steps are not really meant to be run from a cloned repo, as they require the fastq files (which are WAY too big for Github). They are instead included so all the paramters used can be looked up (if necessary), and the key output files are included in 0_data_files
 
-**0a_qiime_workflow.sh**
+**0a_qiime_workflow.sh**: This script uses QIIME2 to process raw data, build ASV table, and perform alpha and beta diversity analysis.
 
-This script uses QIIME2 to process raw data, build ASV table, and perform alpha and beta diversity analysis.
+**0b_picrust2_workflow.sh**: This bash script was used to run picrust2 on UGA's high-performance computing cluster, sapelo2.
 
-**0b_picrust2_workflow.sh**
-
-This bash script was used to run picrust2 on UGA's high-performance computing cluster, sapelo2.
-
-**0_data_files**
-
-This directory holds all the output files from the above. Subsequent scripts will load from here to access the original data.
+**0_data_files**: This directory holds all the output files from the above. Subsequent scripts will load from here to access the original data.
 
 # Step 1 - Data unification and filtering
 
-
+**1a_UnifyData.r**: Unify the ASV table, metadata, taxonomy, & phylogenetic tree into a phyloseq object and write out. (Raw, rarefied, and rarefied + yellow stripe filtered)
+ - Also makes a heatmap of genotype presence across locations
 
 # Step 2 - TODO
 
