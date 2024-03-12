@@ -125,3 +125,33 @@ output = grid.arrange(grobs=list(rawplot, rareplot, ysplot), nrow=1)
 ggsave(output, file="1_parsed_files/1a_genotype_by_location_heatmap.png", width=16, height=5)
 
 
+###############
+# Graph number of samples per location
+###############
+
+get_counts = function(mydata, set="unknown"){
+  toplot = sample_data(mydata) %>%
+    group_by(location) %>%
+    summarize(count=n(), .groups="drop") %>%
+    mutate(set=set)
+}
+
+# Make plots
+rawcount = get_counts(ps, "raw")
+rarecount = get_counts(ps.rarefied, "rarefied")
+yscount = get_counts(ps.rarefied_ys_filtered, "rarefied_ys")
+mycounts = bind_rows(rawcount, rarecount, yscount) %>%
+  mutate(set = factor(set, levels=c("raw", "rarefied", "rarefied_ys")))
+
+countplot = ggplot(mycounts) + 
+  aes(x=location, y=count, fill=set) +
+  geom_col(position="dodge") +
+  theme(axis.text.x = element_text(angle=90, vjust=0.5))
+topcounts = countplot + facet_wrap(~set, nrow=1)
+bottomcounts = countplot + facet_wrap(~location, ncol=8, scales="free_x")
+
+output = grid.arrange(grobs=list(topcounts, bottomcounts), nrow=2, heights=c(1,2))
+ggsave(output, file="1_parsed_files/1a_counts_by_location.png", width=16, height=8)
+
+# Redo to show loss 
+

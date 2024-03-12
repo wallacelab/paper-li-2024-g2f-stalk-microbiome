@@ -19,8 +19,9 @@ Importantly, these steps are not really meant to be run from a cloned repo, as t
 **1a_UnifyData.r**: Unify the ASV table, metadata, taxonomy, & phylogenetic tree into a phyloseq object and write out. (Raw, rarefied, and rarefied + yellow stripe filtered)
  - Also makes a heatmap of genotype presence across locations
 
-# Step 2 - TODO
+# Step 2 - Diversity Metrics
 
+**2a_AlphaDiversity.r** - Calculate and plot basic alpha diversity measures
 
 # Step 3 - TODO
 
