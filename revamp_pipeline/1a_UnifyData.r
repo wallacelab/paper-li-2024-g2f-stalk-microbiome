@@ -10,6 +10,7 @@ rarefy_seed=1 # Random number seed for rarefaction
 yellow_stripes = c("PHW52/PHM49","B73/PHM49","F42/H95","F42/MO17","OH43/B37","PHW52/PHN82","B14A/OH43","B14A/H95","B14A/MO17",
                    "LH74/PHN82","PHG39/PHN82","B73/MO17","B73/PHN82","B37/H95","F42/OH43","B37/MO17","B37/OH43","CG119/CG108",
                    "CG44/CGR01","2369/LH123HT")  # "Yellow-stripe" genotypes that are the focus of this study
+duplicates=c("NCH1-1-159") # Samples that have duplicates (=2 samples with same ID); unclear which is correct, so just filter them out
 
 #############
 # Load data
@@ -75,6 +76,13 @@ revised_taxonomy$Class <- as.factor(revised_taxonomy$Class)
 taxonomy <- as.matrix(revised_taxonomy)
 
 ###############
+# Fix metadata
+###############
+
+#merge OH43/B37 and B37/OH43, since are basically the same hybrid. (We're not doing maternal effects in this study)
+metadata$Corrected_pedigree <- gsub(".*^OH43/B37","B37/OH43",metadata$Corrected_pedigree)
+
+###############
 # Convert to Phylsoeq object
 ###############
 
@@ -85,6 +93,9 @@ META = sample_data(metadata)
 
 #build phyloseq object 
 ps	=	phyloseq(OTU,TAX,phy_tree,META)
+
+#remove NCH1-1-159 samples; site  for m -> Sent us 2 samples and don't know which one is correct.
+ps <- subset_samples(ps, !rownames(sample_data(ps)) %in% duplicates)
 
 # Rarefy to specific depth using the seed value from earlier
 ps.rarefied = rarefy_even_depth(ps, sample.size=rarefy_depth, replace=F, rngseed=rarefy_seed)

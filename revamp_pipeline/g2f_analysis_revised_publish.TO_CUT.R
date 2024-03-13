@@ -81,95 +81,12 @@ library(geodist)
 ####### Stuff cut out above ########
 ####################################
 
-# TODO - What is the below sample removed for? Should this go in the 1a_script?
-
-#remove NCH1-1-159 samples for m
-ps <- subset_samples(ps, rownames(sample_data(ps)) != "NCH1-1-159")
+# TODO - make sure environmental distances are centered and scaled
 
 `%!in%` <- Negate(`%in%`)
 
-# TODO - Next step has B73/OH43 merged. Shouldn't that happen before alpha diversity calcs?
 
 ##########################################################################
-
-#functoin used to keep only duplicate pedigree in every location 
-allDup <- function (value)
-{
-  duplicated(value) | duplicated(value, fromLast = TRUE)
-}
-
-
-#create a empty dataframe 
-G2F_metadata_2019_duplicate_pedigree_ys_filtered <- as.data.frame(matrix(ncol = 50, nrow = 0))
-#inherit colanems from metadata 
-colnames(G2F_metadata_2019_duplicate_pedigree_ys_filtered) <- colnames(G2F_metadata_2019)
-
-#filter the dataset make sure each location only contain samples with peidgree that has at least two replicates 
-for (Location in unique(G2F_metadata_2019$location)) {
-  print(Location)
-  #subset dataset to each location 
-  G2F_location_sample <- subset(G2F_metadata_2019,location==Location)
-  #find samples with duplicate pedigree 
-  G2F_location_all_duplcate_sample <- G2F_location_sample[allDup( G2F_location_sample$Corrected_pedigree),]
-  #bind this location duplicate sample to big dataset 
-  G2F_metadata_2019_duplicate_pedigree_ys_filtered <- rbind(G2F_metadata_2019_duplicate_pedigree_ys_filtered,G2F_location_all_duplcate_sample)
-}
-
-#check location and summary 
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered$location)
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered$Corrected_pedigree)
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered$pedigree)
-
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered$location)
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered$Corrected_pedigree)
-
-#make sample name to be rowname of the dataframe
-G2F_metadata_2019_duplicate_pedigree_ys_filtered$SampleID <- rownames(G2F_metadata_2019_duplicate_pedigree_ys_filtered)
-rownames(G2F_metadata_2019_duplicate_pedigree_ys_filtered) <- NULL
-
-#keep location that has more than 10 samples 
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location <- G2F_metadata_2019_duplicate_pedigree_ys_filtered %>% 
-  group_by(location) %>% filter(n() >= 10)
-
-##keep location has at least 3 unique pedigree
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location <- G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location %>% 
-  group_by(Corrected_pedigree) %>% filter(length(unique(location)) >= 3)
-
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-##check sample name 
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID
-
-#change . in sample name to - for later operation 
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID <- gsub("\\.","-",G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID)
-
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID
-
-#G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location <- as.character(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-
-##check location and pedigree 
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location <- as.factor(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree <- as.factor(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location <- as.character(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-
-##format to dataframe for string substitution
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location <- as.data.frame(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location)
-
-#merge OH43/B37 and B37/OH43
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree <- gsub(".*^OH43/B37","B37/OH43",G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-#create a heatmap to visualize the distribution of pedigree across the location 
-correted_pedigree_heatmap <-ggplot(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location, aes(x=location,y=Corrected_pedigree)) + 
-  geom_tile()
-
-correted_pedigree_heatmap 
-
 
 ##################################################################################################################################
 

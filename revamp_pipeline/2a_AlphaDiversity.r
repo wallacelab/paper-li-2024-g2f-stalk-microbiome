@@ -7,6 +7,7 @@ library(gridExtra)
 
 # TODO - Jason thinks the location comparisons should use the full dataset, not the YS_filtered
 # TODO - Jason thinks the genotype comparisons should use ones present at least X times, not just YS filtered
+# TODO - Need to export diversity metrics so can use them in later heritability calculations
 
 #############
 # Load data
