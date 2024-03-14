@@ -11,7 +11,6 @@ min_reps_per_loc = 2 # How many reps a genotype needs per location to be kept
 min_samples_per_loc = 10 # Minimum number of samples at a location to keep it (after above filtering)
 min_locs_present = 3 # How many different locations a genotype need to be in to be kept (after above)
 
-
 #############
 # Load data
 #############
@@ -28,57 +27,79 @@ metadata=sample_data(ps.rarefied) %>%
   rownames_to_column("SampleID")  # Make sample ID a column and not just the row names
 
 # Keep only genotypes where is replicated a sufficient number of times per location
-replicated = metadata  %>%
+filtered = metadata  %>%
   relocate(SampleID) %>%
   group_by(location, Corrected_pedigree) %>%  
   filter(n() >= min_reps_per_loc)
 
 #keep location that has more than 10 samples 
-replicated <- replicated %>% 
+filtered <- filtered %>% 
   group_by(location) %>% 
   filter(n() >= 10)
 
-# TODO: THE BELOW IS INCORRECT. It's just looking at 3 pedigree instances total, not 3 per location
-##keep location has at least 3 unique pedigree
-replicated <- replicated %>% 
+##keep pedigrees present in least 3 unique locations
+filtered <- filtered %>% 
   group_by(Corrected_pedigree) %>% 
   filter(length(unique(location)) >= 3)
 
+##########
+# Plot diagnostics
+##########
+
+# Helper function to make plots; "tag" gets added to the title of each
+make_plots = function(mydata, tag=""){
+  
+  # Number of locations for each genotype
+  geno_counts = mydata %>%
+    group_by(Corrected_pedigree) %>%
+    summarize(count=length(unique(location)), .groups="drop")
+  
+  genoplot <- ggplot(geno_counts) +
+    aes(x=Corrected_pedigree,y=count) + 
+    geom_col(fill="darkgreen") +
+    geom_abline(slope=0, intercept=min_locs_present, color="magenta", linetype="dashed", linewidth=1.5) +
+    theme(axis.text.x = element_text(angle=90, vjust=0.5)) +
+    ggtitle(paste("Locations with each genotype", tag))
+  
+  # Number of genotypes in each location
+  loc_counts = mydata %>%
+    group_by(location) %>%
+    summarize(count=length(unique(Corrected_pedigree)), .groups="drop")
+  
+  locplot <- ggplot(loc_counts) +
+    aes(x=location,y=count) + 
+    geom_col(fill="darkred") +
+    theme(axis.text.x = element_text(angle=90, vjust=0.5)) +
+    ggtitle(paste("Unique genotypes per location", tag))
+  
+  # Overall heatmap of counts per genotype per location
+  counts = mydata %>%
+    group_by(location, Corrected_pedigree) %>%
+    summarize(count=n(), .groups="drop")
+  
+  myheatmap <- ggplot(counts) +
+    aes(x=location,y=Corrected_pedigree, fill=count) + 
+    geom_tile() +
+    theme(axis.text.x = element_text(angle=90, vjust=0.5)) +
+    ggtitle(paste("Counts of genotypes per location", tag))
+  
+  combined = grid.arrange(grobs=list(genoplot, locplot, myheatmap), nrow=1, widths=c(1,1,1.5))
+  return(combined)
+
+}
+
+# Make plots
+preplots = make_plots(metadata, "(pre)")
+postplots = make_plots(filtered, "(post)")
+allplots = grid.arrange(preplots, postplots, nrow=2)
+
+# Save 
+ggsave(allplots, file="3_GxE/3a_filter_checks.png", width=12, height=8)
 
 
+############
+# Write out filtered data
+############
 
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-##check sample name 
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID
-
-#change . in sample name to - for later operation 
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID <- gsub("\\.","-",G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID)
-
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$SampleID
-
-#G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location <- as.character(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-
-##check location and pedigree 
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location <- as.factor(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree <- as.factor(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location <- as.character(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$location)
-
-##format to dataframe for string substitution
-G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location <- as.data.frame(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location)
-
-# #merge OH43/B37 and B37/OH43 -> Moved to earlier step (1a_)
-# G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree <- gsub(".*^OH43/B37","B37/OH43",G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corrected_pedigree)
-
-#create a heatmap to visualize the distribution of pedigree across the location 
-correted_pedigree_heatmap <-ggplot(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location, aes(x=location,y=Corrected_pedigree)) + 
-  geom_tile()
-
-correted_pedigree_heatmap 
-
+outdata = prune_samples(filtered$SampleID, ps.rarefied)
+saveRDS(outdata, file="3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds")
