@@ -42,7 +42,7 @@ kruskal.results = bind_rows(l1, l2, l3, p1, p2, p3) %>%
   as.data.frame() %>%
   relocate(method, data.name, statistic, parameter, p.value) %>%
   rename(dr=parameter, comparison=data.name)
-write.csv(kruskal.results, file="1_parsed_files/2a_alpha_diversity.kruskal_test_results.csv", row.names=FALSE)
+write.csv(kruskal.results, file="2_Diversity/2a_alpha_diversity.kruskal_test_results.csv", row.names=FALSE)
 
 
 ##########################
@@ -90,5 +90,5 @@ Simpson_pedigree <- plot_richness(ps.rarefied_ys_filtered, x="Corrected_pedigree
 alphaplots = grid.arrange(grobs=list(Shannon_location, Observed_location, Simpson_location,
                                      Shannon_pedigree, Observed_pedigree, Simpson_pedigree),
                           nrow=2)
-ggsave(alphaplots, file="1_parsed_files/2a_alpha_diversity.plots.png", height=12, width=15)
+ggsave(alphaplots, file="2_Diversity/2a_alpha_diversity.plots.png", height=12, width=15)
 
