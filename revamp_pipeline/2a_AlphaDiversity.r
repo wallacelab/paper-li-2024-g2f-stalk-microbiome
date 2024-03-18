@@ -7,7 +7,6 @@ library(gridExtra)
 
 # TODO - Jason thinks the location comparisons should use the full dataset, not the YS_filtered
 # TODO - Jason thinks the genotype comparisons should use ones present at least X times, not just YS filtered
-# TODO - Need to export diversity metrics so can use them in later heritability calculations
 
 #############
 # Load data
@@ -92,3 +91,12 @@ alphaplots = grid.arrange(grobs=list(Shannon_location, Observed_location, Simpso
                           nrow=2)
 ggsave(alphaplots, file="2_Diversity/2a_alpha_diversity.plots.png", height=12, width=15)
 
+
+################
+# Export alpha diversity
+################
+
+alpha_output = G2F_metadata_2019 %>%
+  rownames_to_column("sampleID") %>%
+  select(sampleID, location, rep_number, plot_number, Corrected_pedigree, Observed, Simpson, Shannon)
+write.csv(alpha_output, file="2_Diversity/2a_alpha_diversity.csv", row.names=FALSE)
