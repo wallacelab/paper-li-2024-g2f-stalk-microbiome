@@ -585,7 +585,7 @@ median_shannon_ph <- ggplot(median_alpha_environment_group, aes(x=X1.1.Soil.pH, 
   ) + annotate("text",
                x = c(7,7),
                y = c(3.5,3.6),
-               label = c(paste("p-value = ",soil_pH_shannon_P_value),expression("R"^2~"= 0.414")),size=8)
+               label = c(paste("p-value = ",soil_pH_shannon_P_value),expression("R"^2~"= 0.425")),size=8)
 
 median_shannon_ph
 
@@ -608,7 +608,7 @@ median_ob_ph <- ggplot(median_alpha_environment_group , aes(x=X1.1.Soil.pH, y=me
   ) + annotate("text",
                x = c(7,7),
                y = c(40,43),
-               label = c(paste("p-value = ",soil_pH_observed_features_P_value),expression("R"^2~"= 0.304")),size=8)
+               label = c(paste("p-value = ",soil_pH_observed_features_P_value),expression("R"^2~"= 0.283")),size=8)
 
 median_ob_ph
 
@@ -631,7 +631,7 @@ median_simpson_ph <- ggplot(median_alpha_environment_group, aes(x=X1.1.Soil.pH, 
   ) + annotate("text",
                x = c(7.1,7.1),
                y = c(0.96,0.963),
-               label = c(paste("p-value = ",soil_pH_simpson_P_value),expression("R"^2~"= 0.493")),size=8)
+               label = c(paste("p-value = ",soil_pH_simpson_P_value),expression("R"^2~"= 0.527")),size=8)
 
 median_simpson_ph
 
@@ -979,13 +979,13 @@ summary(G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location$Corre
 ##############################################################################################################
 
 #instead of use kegg pathway, use the pathway abundance calculated based on MetaCYC
-pathway_description <- read.table("./path_abun_unstrat_descrip.tsv",sep = "\t",header = T,check.names = T,row.names = 2)
+pathway_description <- read.table("./path_abun_unstrat_descrip.tsv",sep = "\t",header = T,check.names = T,row.names = 1)
 
 
 # The name of sample was in this formate DEH.1.132 change . to - 
 colnames(pathway_description) <- gsub(x = colnames(pathway_description), pattern = "\\.", replacement = "-")
 #remove description column. since if this column was called to print on cosole, R studio will crash
-pathway_description$pathway <- NULL
+pathway_description$description <- NULL
 #keep pathway with 80% prevalence 
 pathway_description <- pathway_description[rowSums(pathway_description == 0) <= 70, ]
 
@@ -1053,7 +1053,7 @@ significant_result <- data.frame(matrix(c(NA), nrow=1, ncol=9))
 
 for (environmental_name in colnames(pathway_location_metadata)){
   #create the save path for result directory 
-  save_path = paste("./lm_ec_pathway_Massalin2_no_normalize_no_transform_",environmental_name,"_test",sep="")
+  save_path = paste("./lm_ec_pathway_Massalin2_no_transform_",environmental_name,"_test",sep="")
   print(save_path)
   #create the result 
   significant_result_path <- paste(save_path,"/significant_results.tsv",sep="")
@@ -1075,7 +1075,7 @@ for (environmental_name in colnames(pathway_location_metadata)){
   
 }
 
-#significant_result$feature <-gsub("\\."," ",significant_result$feature)
+significant_result$feature <-gsub("\\.","-",significant_result$feature)
 
 significant_result_0.05 <- subset(significant_result,qval <=0.05)
 significant_result_0.01  <- subset(significant_result,qval <=0.01)
@@ -1089,7 +1089,7 @@ pathway_description <- pathway_description[,c("pathway","description")]
 
 #keep only result have adjusted p value lower than 0.05
 
-significant_result_0.05_annotation <- dplyr::left_join(significant_result_0.05,pathway_description, by = c("feature" = "description"))
+significant_result_0.05_annotation <- dplyr::left_join(significant_result_0.05,pathway_description, by = c("feature" = "pathway"))
 significant_result_0.05_annotation <- subset(significant_result_0.05_annotation,value %in% c("Relative.Humidity....","Potassium.ppm.K"))
 
 colnames(significant_result_0.05_annotation)
@@ -1107,7 +1107,7 @@ significant_result_0.05_annotation <- significant_result_0.05_annotation %>%
            ))
 
 
-significant_result_0.05_annotation <- significant_result_0.05_annotation[,c("Factor","feature","association","pathway")]
+significant_result_0.05_annotation <- significant_result_0.05_annotation[,c("Factor","description","association","feature")]
 significant_result_0.05_annotation
 
 write.table(significant_result_0.05_annotation,"./combined_significant_result_rerun_final.tsv",row.names = F,sep="\t")
@@ -1125,5 +1125,154 @@ parent_pathway <- read.csv("/home/hl46161/Downloads/G2F_2019_pathway_rerun_sig_p
 significant_result_0.05_annotation_parent_pathway <- dplyr::left_join(significant_result_0.05_annotation,parent_pathway, by = c("Pathway_ID" = "pathway_id"))
 
 write.table(significant_result_0.05_annotation_parent_pathway,"./combined_significant_result_rerun_final_parent_pathway.tsv",row.names = F,sep="\t")
+
+
+data("MetaCyc_pathway_map")
+
+###########################################################
+
+
+heribitility_calculation_pathway_location <- function(anova_result_list){
+  
+  location_heritibility_list <- list()
+  
+  for (x in 1:length(anova_result_list)) {
+    temp_anova_result <- as.data.frame(anova_result_list[[x]])
+    ssq_residue <- (temp_anova_result$`Sum Sq`[4])
+    ssq_location <- (temp_anova_result$`Sum Sq`[1])
+    ssq_pedigree <- (temp_anova_result$`Sum Sq`[2])
+    ssq_pedigree_location <- (temp_anova_result$`Sum Sq`[3])
+    heritbality_location <- (ssq_location/(ssq_residue + ssq_location + ssq_pedigree +ssq_pedigree_location))
+    location_heritibility_list[x] <- heritbality_location
+  }
+  return(location_heritibility_list)
+}
+
+#########################################################
+
+heribitility_calculation_pathway_pedigree <- function(anova_result_list){
+  
+  pedigree_heritibility_list <- list()
+  
+  for (x in 1:length(anova_result_list)) {
+    temp_anova_result <- as.data.frame(anova_result_list[[x]])
+    ssq_residue <- (temp_anova_result$`Sum Sq`[4])
+    ssq_location <- (temp_anova_result$`Sum Sq`[1])
+    ssq_pedigree <- (temp_anova_result$`Sum Sq`[2])
+    ssq_pedigree_location <- (temp_anova_result$`Sum Sq`[3])
+    heritbality_pedigree <- (ssq_pedigree/(ssq_residue + ssq_location + ssq_pedigree + ssq_pedigree_location))
+    pedigree_heritibility_list[x] <- heritbality_pedigree
+    
+  }
+  return(pedigree_heritibility_list)
+  
+}
+
+###################################################################
+
+heribitility_calculation_pathway_pedigree_location <- function(anova_result_list){
+  
+  GE_heritibility_list <- list()
+  
+  for (x in 1:length(anova_result_list)) {
+    temp_anova_result <- as.data.frame(anova_result_list[[x]])
+    ssq_residue <- (temp_anova_result$`Sum Sq`[4])
+    ssq_location <- (temp_anova_result$`Sum Sq`[1])
+    ssq_pedigree <- (temp_anova_result$`Sum Sq`[2])
+    ssq_pedigree_location <- (temp_anova_result$`Sum Sq`[3])
+    heritbality_pedigree_location <- (ssq_pedigree_location/(ssq_residue + ssq_location + ssq_pedigree +ssq_pedigree_location))
+    GE_heritibility_list[x] <- heritbality_pedigree_location
+  }
+  return(GE_heritibility_list)
+}
+
+#########################################################
+
+
+rownames(input_pathway_table_metadata) <- input_pathway_table_metadata$SampleID
+
+colnames(input_pathway_table_metadata)
+#pathway_table <- input_pathway_table_metadata[,c("1CMET2-PWY":"VALSYN-PWY")]
+pathway_table <- input_pathway_table_metadata[,c(1:280)]
+
+
+#run linear regression on each pathway
+lm_pathway_table_location_pedigree  <- lapply(pathway_table, function(x) lm(x ~ location + Corrected_pedigree + location:Corrected_pedigree, data = input_pathway_table_metadata))
+#summary 
+pathway_table_summaries <- lapply(lm_pathway_table_location_pedigree,summary)
+#run annova
+#length(lm_ko_table_location_pedigree)
+lm_pathway_table_location_pedigree_annova_results <- lapply(lm_pathway_table_location_pedigree,anova)
+
+#length(ko_table_location_pedigree_annova_results)
+
+pathway_table_location_heritibility_list  <- heribitility_calculation_pathway_location(lm_pathway_table_location_pedigree_annova_results)
+pathway_table_pedigree_heritibility_list  <- heribitility_calculation_pathway_pedigree(lm_pathway_table_location_pedigree_annova_results)
+pathway_table_GE_heritibility_list  <- heribitility_calculation_pathway_pedigree_location(lm_pathway_table_location_pedigree_annova_results)
+
+taxa_name <- colnames(pathway_table)
+
+#organize the results from list to data table and add taxa name and location 
+pathway_location_heritibility_table <- data.table(heritibility=pathway_table_location_heritibility_list)
+pathway_location_heritibility_table$type <- "Environment"
+pathway_location_heritibility_table$taxa <- taxa_name
+
+#get the top five taxa with highest location heritibility
+pathway_location_heritibility_table <- as.data.frame(lapply(pathway_location_heritibility_table,unlist))
+pathway_location_heritibility_table <- pathway_location_heritibility_table[order(pathway_location_heritibility_table$heritibility,decreasing = TRUE),]
+top_5_location_heritibility_table <- pathway_location_heritibility_table[c(1:20),]
+
+
+#organize the results from list to data table and add taxa name and location
+pathway_pedigree_heritibility_table <- data.table(heritibility=pathway_table_pedigree_heritibility_list)
+pathway_pedigree_heritibility_table$type <- "Maize genotype" 
+pathway_pedigree_heritibility_table$taxa <- taxa_name
+
+
+#get the top five taxa with highest pedigree heritibility
+pathway_pedigree_heritibility_table <- as.data.frame(lapply(pathway_pedigree_heritibility_table,unlist))
+pathway_pedigree_heritibility_table <- pathway_pedigree_heritibility_table[order(pathway_pedigree_heritibility_table$heritibility,decreasing = TRUE),]
+top_5_pedigree_heritibility_table <- pathway_pedigree_heritibility_table[c(1:20),]
+
+#organize the results from list to data table and add taxa name and location
+pathway_GE_heritibility_table <- data.table(heritibility=pathway_table_GE_heritibility_list)
+pathway_GE_heritibility_table$type <- "GXE" 
+pathway_GE_heritibility_table$taxa <- taxa_name
+
+#get the top five taxa with highest GXE heritibility
+pathway_GE_heritibility_table <- as.data.frame(lapply(pathway_GE_heritibility_table,unlist))
+pathway_GE_heritibility_table <- pathway_GE_heritibility_table[order(pathway_GE_heritibility_table$heritibility,decreasing = TRUE),]
+top_5_GE_heritibility_table <- pathway_GE_heritibility_table[c(1:20),]
+
+#build the heritibility table 
+pathway_heritibility_table <- dplyr::bind_rows(pathway_location_heritibility_table,pathway_pedigree_heritibility_table)
+pathway_heritibility_table <- dplyr::bind_rows(pathway_heritibility_table,pathway_GE_heritibility_table)
+
+pathway_heritibility_table <- as.data.frame(lapply(pathway_heritibility_table, unlist))
+
+
+## plot the heritibility of each term on family level core taxa 
+Pathway_heritibility_graph <- ggplot(pathway_heritibility_table , aes(x=type, y=heritibility,fill = type)) + 
+  geom_violin(trim = TRUE) + 
+  theme(
+    legend.position='none',
+    axis.title.x = element_blank(),
+    panel.border = element_rect(fill = NA, colour = "grey28"), 
+    panel.background = element_blank(),
+    axis.title.y = element_text(size=28, face="bold"),
+    plot.title = element_text(size=28, face="bold"),
+    axis.text.y = element_text(size=28, face="bold"),
+    axis.text.x = element_text(size=28, face="bold"),
+  ) + stat_summary(fun = "mean",
+                   geom = "crossbar", 
+                   width = 0.2,
+                   colour = "black")
+
+Pathway_heritibility_graph
+
+ggsave("./MetaCyc_pathway_GXE.png",height=10, width=10, device="png")
+colnames(pathway_table)
+
+
 
 
