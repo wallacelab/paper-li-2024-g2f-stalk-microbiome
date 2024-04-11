@@ -5,6 +5,7 @@
 # TODO: DBRDA supposed to use distance matrix, but giving it first 2 PCs instead.
 #    That seems wrong. Correct?
 # TODO: Export a text table of values (with p-values); may need for later analyses
+# TODO: Confirm that dbrda correctly matches distance matrix with values based on sample name
 
 library(ggplot2)
 library(phyloseq)
@@ -16,30 +17,28 @@ library(vegan)
 nperms = 1000 # number of permutations for distance-based redundancy analysis
 
 # Load necessary data
-weighted_unifrac = read_qza("0_data_files/weighted_unifrac_pcoa_results.qza")
-unweighted_unifrac = read_qza("0_data_files/unweighted_unifrac_pcoa_results.qza")
+weighted_unifrac = read_qza("0_data_files/weighted_unifrac_distance_matrix.qza")
+unweighted_unifrac = read_qza("0_data_files/unweighted_unifrac_distance_matrix.qza")
 metadata = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds") %>% 
   sample_data() %>%
   data.frame() %>%
   rownames_to_column("SampleID")
-
 
 ########################################################################
 
 
 # Function to calculate beta heritability from distance matrices and metadata
 beta_heritability_cal <- function(input_qza, input_metadata) {
-  # Extract distance matrix and select the sample ID and the first two principal components
-  distance_matrix <- input_qza$data$Vectors[, c("SampleID", "PC1", "PC2")]
+  # Extract distance matrix
+  distance_matrix <- input_qza$data %>% as.matrix()
   
   # Subset to just the common taxa
-  taxa = intersect(distance_matrix$SampleID, input_metadata$SampleID)
+  taxa = intersect(rownames(distance_matrix), input_metadata$SampleID)
   
   # Match the distance matrix with the provided metadata based on sample IDs
   input_metadata <- subset(input_metadata, SampleID %in% taxa)
-  distance_matrix <- subset(distance_matrix, SampleID %in% taxa)
-  rownames(distance_matrix) <- distance_matrix$SampleID
-  distance_matrix$SampleID <- NULL
+  distance_matrix <- as.matrix(distance_matrix)[taxa, taxa]
+  distance_matrix = as.dist(distance_matrix)
   
   # Run dbRDA and analyze
   dbRDA_result <- dbrda(distance_matrix ~ location + Corrected_pedigree + location:Corrected_pedigree, input_metadata)
