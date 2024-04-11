@@ -81,7 +81,7 @@ ggsave(alphaplots, file="3_GxE/3b_alpha_diversity_normality_check.postfilter.png
 
 
 ###########
-# Calculate GxE for alpha diversity - WORKIKNG ON THIS SECTION
+# Calculate GxE for alpha diversity
 ###########
 
 # Basic linear model
@@ -155,8 +155,8 @@ alphaplot = ggplot(data=plotdata) +
   )
 
 #output the graph
-ggsave(alphaplot, file="3_GxE/3a_alpha_diversity.variance_explained.png", height=5, width=6, device="png")
+ggsave(alphaplot, file="3_GxE/3b_alpha_diversity.variance_explained.png", height=5, width=6, device="png")
 
 # Write data
-write.csv(alpha_result, file="3_GxE/3a_alpha_diversity.variance_explained.csv", row.names=FALSE)
+write.csv(alpha_result, file="3_GxE/3b_alpha_diversity.variance_explained.csv", row.names=FALSE)
 
