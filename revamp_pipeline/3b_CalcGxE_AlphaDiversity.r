@@ -34,10 +34,6 @@ metadata = sample_data(mydata) %>%
   rownames_to_column("sampleID") 
 joindata = right_join(alphadiv, metadata)
 
-# # TODO: Are the below necessary? Commented out for now
-# joindata$location  <- as.factor(joindata$location)
-# joindata$Corrected_pedigree <- as.factor(joindata$Corrected_pedigree)
-
 # Determine the names of the provided alpha diversity metrics
 alpha_names = setdiff(names(alphadiv), alpha_id_cols)
 
@@ -52,6 +48,18 @@ plot2 = ggplot(data = joindata, aes(x=Observed)) + geom_histogram()
 plot3 = ggplot(data = joindata, aes(x=Simpson)) + geom_histogram()
 alphaplots = grid.arrange(grobs=list(plot1, plot2, plot3), nrow=1)
 ggsave(alphaplots, file="3_GxE/3b_alpha_diversity_normality_check.png", width=10, height=4)
+
+#########
+# Transform non-normal metrics
+#########
+
+# Reflect and log-transofrm Simpson index
+joindata$Simpson.reflect_log = log(1-joindata$Simpson)
+alpha_names = c(alpha_names, "Simpson.reflect_log")
+
+# Log-transform Observed ASVs
+joindata$Observed.log = log(joindata$Observed+1)
+alpha_names = c(alpha_names, "Observed.log")
 
 #########
 # Check for outliers with Rosner's test
@@ -73,6 +81,7 @@ for(myalpha in alpha_names){
 }
 
 # Visualize the alpha diversity (& check for normality)
+# TODO - Extend to allow additional alpha names
 plot1 = ggplot(data = joindata, aes(x=Shannon)) + geom_histogram(fill="darkblue")
 plot2 = ggplot(data = joindata, aes(x=Observed)) + geom_histogram(fill="darkblue")
 plot3 = ggplot(data = joindata, aes(x=Simpson)) + geom_histogram(fill="darkblue")

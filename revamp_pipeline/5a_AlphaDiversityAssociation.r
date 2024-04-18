@@ -4,15 +4,12 @@
 
 library(dplyr)
 library(ggplot2)
+library(ggpubr)
 library(gridExtra)
 library(phyloseq)
 library(tidyverse)
 
 # Load data
-metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds") %>% 
-  sample_data() %>%
-  data.frame() %>%
-  rownames_to_column("SampleID")
 alpha_diversity = read.csv("2_Diversity/2a_alpha_diversity.csv")
 
 ###########################################################
@@ -60,7 +57,7 @@ plot_diversity_vs_soil_pH <- function(df, y, ylab) {
 
 
 # Investigate the median alpha diversity in a location vs environmental factors
-G2F_2019_median_alpha_diversity_by_location_data <- G2F_metadata_2019 %>%
+G2F_2019_median_alpha_diversity_by_location_data <- alpha_diversity %>%
   group_by(location) %>%
   summarize(
     median_shannon = median(Shannon, na.rm = TRUE),
@@ -68,8 +65,8 @@ G2F_2019_median_alpha_diversity_by_location_data <- G2F_metadata_2019 %>%
     median_simpson = median(Simpson, na.rm = TRUE)
   )
 
-G2f_2019_soil_data <- read.csv("./g2f_2019_soil_data.csv", sep = ",")
-G2f_2019_weather_data <- read.csv("./G2F_2019_weather_average_and_sum.tsv", sep = "\t")
+G2f_2019_soil_data <- read.csv("0_data_files/g2f_2019_soil_data.csv", sep = ",")
+G2f_2019_weather_data <- read.csv("0_data_files//G2F_2019_weather_average_and_sum.tsv", sep = "\t")
 
 # Joining soil and weather data with median alpha diversity data
 G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data <- G2F_2019_median_alpha_diversity_by_location_data %>%
@@ -96,4 +93,4 @@ median_alpha_diversity_plot <- ggarrange(median_shannon_ph, median_simpson_ph, m
 
 median_alpha_diversity_plot
 
-ggsave("./median_alpha_diversity_plot.png", plot = median_alpha_diversity_plot, height = 8, width = 24, device = "png")
+ggsave("5_Associations/5a_median_alpha_diversity_plot.png", plot = median_alpha_diversity_plot, height = 8, width = 24, device = "png")

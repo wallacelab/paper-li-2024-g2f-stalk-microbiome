@@ -16,7 +16,7 @@ library(qiime2R)
 #        subsets a provided Phyloseq object instead?
 
 # Global variables
-min_prevalence = 0.6 # Fraction of samples a taxon has to be in to be "core" (0.2-0.7)
+min_prevalence = 0.6 # Fraction of samples a taxon has to be in to be "core"
 
 # Load data
 metadata = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds") %>% 
