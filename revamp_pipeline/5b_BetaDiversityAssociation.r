@@ -1,3 +1,7 @@
+#! /usr/bin/Rscript
+
+# Look for associations between beta diversity and environmental parameters
+
 library(dplyr)
 library(ggplot2)
 library(gridExtra)
@@ -5,22 +9,32 @@ library(vegan) # for mantel test
 library(qiime2R)
 library(ggpubr)
 
-setwd("D:/G2F_Rerun/G2F_data/G2F_data-main/")
+# TODO: Jason not sure that using the right dataset. Use a less filtered one?
 
 # Function to read QZA files and convert to a data frame
 read_qza_to_df <- function(path) {
   as.data.frame(as.matrix(read_qza(path)$data))
 }
 
+# Note: The dataset for below ahd the following filters applied
+# - Mitochondria & chloroplasts filtered out
+# - Taxa in blank samples removed
+# - Only the "yellow stripe" genotypes included
+# - Only genotypes with at least 2 reps per location included
+# - Location NCH1 removed
+# - Samples grouped by location
+# - Total table rarefiedl to 18000 reads per location
+
+
 # Reading environmental factor distance matrices
-Relative_Humidity_distance <- read_qza_to_df("./core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-no-NCH1-group-by-location-from-rarefied_table-18000/Relative.Humidity...._distance_matrix.qza")
-Potassium_distance <- read_qza_to_df("./core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-no-NCH1-group-by-location-from-rarefied_table-18000/Potassium.ppm.K_distance_matrix.qza")
-Solar_radiation_distance <- read_qza_to_df("./core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-no-NCH1-group-by-location-from-rarefied_table-18000/Solar.Radiation..W.m2._distance_matrix.qza")
-Temperature_distance <- read_qza_to_df("./core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-no-NCH1-group-by-location-from-rarefied_table-18000/Temperature..C._distance_matrix.qza")
+Relative_Humidity_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Relative.Humidity...._distance_matrix.qza")
+Potassium_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Potassium.ppm.K_distance_matrix.qza")
+Solar_radiation_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Solar.Radiation..W.m2._distance_matrix.qza")
+Temperature_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Temperature..C._distance_matrix.qza")
 
 # Reading UniFrac distance matrices
-location_weighted_unifrac <- read_qza_to_df("./core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-no-NCH1-group-by-location-from-rarefied_table-18000/weighted_unifrac_distance_matrix.qza")
-location_unweighted_unifrac <- read_qza_to_df("./core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-no-NCH1-group-by-location-from-rarefied_table-18000/unweighted_unifrac_distance_matrix.qza")
+location_weighted_unifrac <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/weighted_unifrac_distance_matrix.qza")
+location_unweighted_unifrac <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/unweighted_unifrac_distance_matrix.qza")
 
 
 # Function to intersect and align distance matrices based on common location names
@@ -95,7 +109,7 @@ lm_results <- list(
 # Mantel tests
 mantel_results <- list(
   weighted_K = perform_mantel(Potassium_distance_aligned,location_weighted_unifrac),
-  weighted_T = perform_mantel(Temperature_distance_aligned,location_unweighted_unifrac),
+  weighted_T = perform_mantel(Temperature_distance_aligned,location_unweighted_unifrac)
   
   # Add more as needed
 )
@@ -121,12 +135,12 @@ plots_list <- list(
   # Add more plots as needed
 )
 
-plots_list
+#plots_list
 
 
 
 # Arrange and save the plots
 G2F_environment_weighted_plot <- ggarrange(plotlist = plots_list, nrow = 1, ncol = 2)
-ggsave("./G2F_environment_weighted_plot.png", G2F_environment_weighted_plot, width = 20, height = 10, device = "png")
+ggsave("5_Associations/5b_G2F_environment_weighted_plot.png", G2F_environment_weighted_plot, width = 20, height = 10, device = "png")
 
-G2F_environment_weighted_plot
+#G2F_environment_weighted_plot
