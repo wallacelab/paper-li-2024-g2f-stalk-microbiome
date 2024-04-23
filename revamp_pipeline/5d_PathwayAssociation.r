@@ -13,7 +13,6 @@ library(phyloseq)
 #       Double-check math and convert to a parameter
 # TODO: Environmental variables (inc. 2 to focus on) are hardcoded. Able to do that more programmatically?
 
-
 # File locations
 pathway_file = "0_data_files/path_abun_unstrat_descrip.tsv"
 soil_file = "0_data_files/g2f_2019_soil_data.csv"
