@@ -10,10 +10,10 @@ library(tidyr)
 library(tidyverse)
 library(phyloseq)
 
-# TODO - There's a filtering of the pathways with an amount of 70. Is this correct? Presumably for prevalence?
-
 # Global variables
 pathway_file="0_data_files/path_abun_unstrat_descrip.tsv"
+max_sample_missing=70 # Pathway descriptions with 0s (=missing) in more than this many samples will be removed
+
 
 # Load metadata
 metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds") %>% 
@@ -34,7 +34,7 @@ heritability_calculation <- function(anova_result, sum_sq_index) {
 pathway_description <- read.table(pathway_file, sep = "\t", header = TRUE, check.names = TRUE, row.names = 1)
 colnames(pathway_description) <- gsub("\\.", "-", colnames(pathway_description))
 pathway_description$description <- NULL  # Remove description to prevent console crash
-pathway_description <- pathway_description[rowSums(pathway_description == 0) <= 70, ] #TODO - This correct?
+pathway_description <- pathway_description[rowSums(pathway_description == 0) <= max_sample_missing, ]
 pathways = rownames(pathway_description)
 
 # Prepare pathway data
