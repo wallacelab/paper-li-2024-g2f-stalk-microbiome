@@ -2,10 +2,6 @@
 
 # Calculate GxE for beta diversity metrics
 
-# TODO: DBRDA supposed to use distance matrix, but giving it first 2 PCs instead.
-#    That seems wrong. Correct?
-# TODO: Confirm that dbrda correctly matches distance matrix with values based on sample name
-
 library(ggplot2)
 library(phyloseq)
 library(qiime2R)
@@ -36,9 +32,17 @@ beta_heritability_cal <- function(input_qza, input_metadata) {
   taxa = intersect(rownames(distance_matrix), input_metadata$SampleID)
   
   # Match the distance matrix with the provided metadata based on sample IDs
-  input_metadata <- subset(input_metadata, SampleID %in% taxa)
+  taxamatch = match(taxa, input_metadata$SampleID)
+  input_metadata <- input_metadata[taxamatch,]
   distance_matrix <- as.matrix(distance_matrix)[taxa, taxa]
   distance_matrix = as.dist(distance_matrix)
+  
+  # Confirm that are in the same order so dbRDA works
+  if(any(input_metadata$SampleID != rownames(as.matrix(distance_matrix)))){
+    stop("FAIL: Metadata and distance matrix samples do not match! Unable to run dbRDA.")
+  }else{
+    cat("PASS: All metadata and distance matrix names match\n")
+  }
   
   # Run dbRDA and analyze
   dbRDA_result <- dbrda(distance_matrix ~ location + Corrected_pedigree + location:Corrected_pedigree, input_metadata)
