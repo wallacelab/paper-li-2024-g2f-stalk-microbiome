@@ -218,6 +218,6 @@ Corrected_pedigree_family_core_microbiome_heatmap <-ggplot(Corrected_pedigree_ph
 Corrected_pedigree_family_core_microbiome_heatmap
 
 ggsave("4_CoreMicrobiome/4a_genotype_family_core_microbiome_heatmap.png",
-       plot = location_family_core_microbiome_heatmap, height=8, width=12, device="png")
+       plot = Corrected_pedigree_family_core_microbiome_heatmap, height=8, width=12, device="png")
 
 
