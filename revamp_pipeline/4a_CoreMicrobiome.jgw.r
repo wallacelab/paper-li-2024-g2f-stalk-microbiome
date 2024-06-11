@@ -70,7 +70,7 @@ core_microbiome_preparse <- function(tax_level, mydata){
 }
 
 # Plot heatmap
-plot_heatmap = function(mycore, myrank, xval, outfile){
+plot_heatmap = function(mycore, myrank, xval, outfile, plot_all=FALSE){
   # Format taxonomy
   taxonomy = str_split_fixed(mycore$Taxaname, ';', n=Inf)
   colnames(taxonomy) = rank_names(asvs)
@@ -79,16 +79,24 @@ plot_heatmap = function(mycore, myrank, xval, outfile){
   # Set which variable is on X axis
   mycore$xval = mycore[,xval] %>% unlist()
   
+  my_aes = aes(x=xval, y=plot_taxon)
+  if(plot_all){ # Add prevalence as a fill if specified
+    my_aes = aes(x=xval, y=plot_taxon, fill=prevalence)
+  }
+  
   # Make plot
+  colorscale = c("#220000","red3","#000077","blue")
+  colorbreaks = c(0, min_prevalence*0.999, min_prevalence, 1)
   myplot = ggplot(mycore) +
-    aes(x=xval, y=plot_taxon) +
+    my_aes +
     geom_tile() + 
     theme(
       axis.text = element_text(size=15, face="bold"),
       axis.text.x = element_text(angle=90),
       axis.title = element_text(size=15,face="bold")
     ) +
-    labs(y = myrank, x=xval)
+    labs(y = myrank, x=xval) +
+  scale_fill_gradientn(colors=colorscale, values=colorbreaks)
   
   # Save plot
   ggsave(myplot, file=outfile, height=8, width=12)
@@ -105,20 +113,38 @@ names(preparse) = ranks
 # Prevalence by location
 ###############
 
-location_cores = lapply(ranks, function(myrank){
+# General prevalence
+location_prevalence = lapply(ranks, function(myrank){
   prevalence = preparse[[myrank]] %>%
     group_by(location, taxon, Taxaname) %>%
-    summarize(prevalence = sum(present) / n(), .groups="drop") %>%
-    filter(prevalence >= prevalence_level)
+    summarize(prevalence = sum(present) / n(), .groups="drop")
   return(prevalence)
 })
-names(location_cores) = ranks
+names(location_prevalence) = ranks
+
+# Filter for core
+location_cores = lapply(location_prevalence, function(myprev){
+  myprev %>%
+    filter(prevalence >= prevalence_level)
+})
+
+# Core but with actual prevalence values retained
+location_cores_all = lapply(ranks, function(myrank){
+  location_prevalence[[myrank]] %>%
+    filter(taxon %in% location_cores[[myrank]]$taxon)
+})
+names(location_cores_all) = ranks
 
 # Plot and save
 locplots = lapply(ranks, function(myrank){
   mycore = location_cores[[myrank]]
   outfile=paste("4_CoreMicrobiome/4a_location_",myrank,"_core_microbiome_heatmap.jgw.png", sep="")
   plot_heatmap(mycore, myrank, xval="location", outfile=outfile)
+  
+  mycore = location_cores_all[[myrank]]
+  outfile=paste("4_CoreMicrobiome/4b_location_",myrank,"_core_microbiome_heatmap.all.jgw.png", sep="")
+  plot_heatmap(mycore, myrank, xval="location", outfile=outfile, plot_all=TRUE)
+  
 })
 
 # # TODO - Still to look at - Subset to just those taxa that are "core" in a single location
@@ -140,19 +166,38 @@ locplots = lapply(ranks, function(myrank){
 # Core by Genotype
 ##################
 
-genotype_cores = lapply(ranks, function(myrank){
+genotype_prevalence = lapply(ranks, function(myrank){
   prevalence = preparse[[myrank]] %>%
     group_by(Corrected_pedigree, taxon, Taxaname) %>%
-    summarize(prevalence = sum(present) / n(), .groups="drop") %>%
-    filter(prevalence >= prevalence_level)
+    summarize(prevalence = sum(present) / n(), .groups="drop")
   return(prevalence)
 })
-names(genotype_cores) = ranks
+names(genotype_prevalence) = ranks
+
+# Filter for core
+genotype_cores = lapply(genotype_prevalence, function(myprev){
+  myprev %>%
+    filter(prevalence >= prevalence_level)
+})
+
+# Core but with actual prevalence values retained
+genotype_cores_all = lapply(ranks, function(myrank){
+  genotype_prevalence[[myrank]] %>%
+    filter(taxon %in% genotype_cores[[myrank]]$taxon)
+})
+names(genotype_cores_all) = ranks
+
+
 
 # Plot and save
 genoplots = lapply(ranks, function(myrank){
   mycore = genotype_cores[[myrank]]
   outfile=paste("4_CoreMicrobiome/4a_genotype_",myrank,"_core_microbiome_heatmap.jgw.png", sep="")
   plot_heatmap(mycore, myrank, xval="Corrected_pedigree", outfile=outfile)
+  
+  mycore = genotype_cores_all[[myrank]]
+  outfile=paste("4_CoreMicrobiome/4b_genotype_",myrank,"_core_microbiome_heatmap.all.jgw.png", sep="")
+  plot_heatmap(mycore, myrank, xval="Corrected_pedigree", outfile=outfile, plot_all=TRUE)
+  
 })
 
