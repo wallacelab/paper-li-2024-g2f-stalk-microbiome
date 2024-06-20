@@ -8,18 +8,20 @@ library(ggplot2)
 library(stringr)
 library(phyloseq)
 library(qiime2R)
+library(parallel)
 
-# TODO - Jason disagrees with this choice of subsample. Should use the entire dataset for 
-#        a location, not just the duplicated pedigrees
 # TODO - How look at Unique vs "Min 10 locations" subcores?
 
+
 # Global variables
+min_fraction = 0.001 # Min fraction of a sample an OTU has to consist of to "count" for core calculations
 min_prevalence = 0.6 # Fraction of samples a taxon has to be in to be "core"
 ranks=c("Phylum", "Class", "Order", "Family", "Genus", "Species") # Taxonomic ranks to test at
+ncores=7 # Number of CPU cores to use for mclapply()
 
 # Load data 
 
-#mydata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds")
+#asvs = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds")
 asvs = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds")
 metadata = asvs %>% 
   sample_data() %>%
@@ -27,9 +29,9 @@ metadata = asvs %>%
   rownames_to_column("SampleID")
 
 # Precompute collapsed taxon profiles (takes a while)
-collapsed_taxa = lapply(ranks, function(myrank){
+collapsed_taxa = mclapply(ranks, function(myrank){
   tax_glom(asvs, taxrank = myrank)
-})
+}, mc.cores=ncores)
 names(collapsed_taxa) = ranks
 
 ###############
@@ -47,7 +49,7 @@ get_namekey = function(mydata){
 }
 
 # Preparse the ASV data down to just locations and genotypes
-core_microbiome_preparse <- function(tax_level, mydata){
+core_microbiome_preparse <- function(tax_level, mydata, collapsed_taxa){
 
   # Grab collapsed data & name key at given taxonomic level
   collapsed = collapsed_taxa[[tax_level]]
@@ -61,16 +63,19 @@ core_microbiome_preparse <- function(tax_level, mydata){
     as.data.frame() %>%
     rownames_to_column("SampleID") %>%
     left_join(metadata, by="SampleID") %>%
-    relocate(SampleID, Corrected_pedigree, location) %>%
+    #relocate(SampleID, Corrected_pedigree, location) %>%
     select(SampleID, Corrected_pedigree, location, all_of(mytaxa)) %>%
     pivot_longer(cols=all_of(mytaxa), names_to="taxon", values_to="count") %>%
-    mutate(present = count >0) %>% # Add a true/false column for if taxon present
+    group_by(SampleID) %>%
+    mutate(fraction=count / sum(count), present = fraction >= min_fraction)%>% # True/false for if taxon present in a sample at at least min_fraction abundance
+    #mutate(present = count > 0) %>% # Add a true/false column for if taxon present
     left_join(namekey, by="taxon")
   
+  return(collapsed_counts)
 }
 
 # Plot heatmap
-plot_heatmap = function(mycore, myrank, xval, outfile, plot_all=FALSE){
+plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
   # Format taxonomy
   taxonomy = str_split_fixed(mycore$Taxaname, ';', n=Inf)
   colnames(taxonomy) = rank_names(asvs)
@@ -79,13 +84,14 @@ plot_heatmap = function(mycore, myrank, xval, outfile, plot_all=FALSE){
   # Set which variable is on X axis
   mycore$xval = mycore[,xval] %>% unlist()
   
+  # Set mapping aesthetics
   my_aes = aes(x=xval, y=plot_taxon)
   if(plot_all){ # Add prevalence as a fill if specified
     my_aes = aes(x=xval, y=plot_taxon, fill=prevalence)
   }
   
   # Make plot
-  colorscale = c("#220000","red3","#000077","blue")
+  colorscale = c("#000000","#2b2b2b", "#000080","#0000FF")
   colorbreaks = c(0, min_prevalence*0.999, min_prevalence, 1)
   myplot = ggplot(mycore) +
     my_aes +
@@ -95,7 +101,8 @@ plot_heatmap = function(mycore, myrank, xval, outfile, plot_all=FALSE){
       axis.text.x = element_text(angle=90),
       axis.title = element_text(size=15,face="bold")
     ) +
-    labs(y = myrank, x=xval) +
+    labs(y = myrank, x=xval, 
+         title=paste("Core microbiome of samples (only counts when >=",min_fraction,"of a sample)") )+
   scale_fill_gradientn(colors=colorscale, values=colorbreaks)
   
   # Save plot
@@ -106,7 +113,8 @@ plot_heatmap = function(mycore, myrank, xval, outfile, plot_all=FALSE){
 # Preparse data
 ##########
 
-preparse = lapply(ranks, FUN=core_microbiome_preparse, mydata = asvs)
+# Preparse the ASV data to make it quicker to plot
+preparse = lapply(ranks, FUN=core_microbiome_preparse, mydata = asvs, collapsed_taxa=collapsed_taxa)
 names(preparse) = ranks
 
 ###############
@@ -116,16 +124,17 @@ names(preparse) = ranks
 # General prevalence
 location_prevalence = lapply(ranks, function(myrank){
   prevalence = preparse[[myrank]] %>%
+    #filter(fraction >= min_fraction) %>%
     group_by(location, taxon, Taxaname) %>%
     summarize(prevalence = sum(present) / n(), .groups="drop")
   return(prevalence)
 })
 names(location_prevalence) = ranks
 
-# Filter for core
+# Filter for core microbiome
 location_cores = lapply(location_prevalence, function(myprev){
   myprev %>%
-    filter(prevalence >= prevalence_level)
+    filter(prevalence >= min_prevalence)
 })
 
 # Core but with actual prevalence values retained
@@ -137,13 +146,15 @@ names(location_cores_all) = ranks
 
 # Plot and save
 locplots = lapply(ranks, function(myrank){
+  # Basic binary plot
   mycore = location_cores[[myrank]]
   outfile=paste("4_CoreMicrobiome/4a_location_",myrank,"_core_microbiome_heatmap.jgw.png", sep="")
-  plot_heatmap(mycore, myrank, xval="location", outfile=outfile)
-  
+  plot_heatmap_custom(mycore, myrank, xval="location", outfile=outfile)
+
+  # More thorough heatmap
   mycore = location_cores_all[[myrank]]
   outfile=paste("4_CoreMicrobiome/4b_location_",myrank,"_core_microbiome_heatmap.all.jgw.png", sep="")
-  plot_heatmap(mycore, myrank, xval="location", outfile=outfile, plot_all=TRUE)
+  plot_heatmap_custom(mycore, myrank, xval="location", outfile=outfile, plot_all=TRUE)
   
 })
 
@@ -177,7 +188,7 @@ names(genotype_prevalence) = ranks
 # Filter for core
 genotype_cores = lapply(genotype_prevalence, function(myprev){
   myprev %>%
-    filter(prevalence >= prevalence_level)
+    filter(prevalence >= min_prevalence)
 })
 
 # Core but with actual prevalence values retained
@@ -193,11 +204,61 @@ names(genotype_cores_all) = ranks
 genoplots = lapply(ranks, function(myrank){
   mycore = genotype_cores[[myrank]]
   outfile=paste("4_CoreMicrobiome/4a_genotype_",myrank,"_core_microbiome_heatmap.jgw.png", sep="")
-  plot_heatmap(mycore, myrank, xval="Corrected_pedigree", outfile=outfile)
+  plot_heatmap_custom(mycore, myrank, xval="Corrected_pedigree", outfile=outfile)
   
   mycore = genotype_cores_all[[myrank]]
   outfile=paste("4_CoreMicrobiome/4b_genotype_",myrank,"_core_microbiome_heatmap.all.jgw.png", sep="")
-  plot_heatmap(mycore, myrank, xval="Corrected_pedigree", outfile=outfile, plot_all=TRUE)
+  plot_heatmap_custom(mycore, myrank, xval="Corrected_pedigree", outfile=outfile, plot_all=TRUE)
   
 })
 
+####################
+# Overall heatmap of all samples
+####################
+
+make_overall_heatmap = function(collapsed, rank="Phylum", min_fraction, min_prevalence){
+  # Get data and make relative abundance
+  mydata=collapsed[[rank]] 
+  myfraction = mydata %>%
+    transform_sample_counts(fun=function(x) x / sum(x) )
+  
+  # Determine which OTUs count as core
+  mytable=otu_table(myfraction)
+  fraction_present = rowSums(mytable >= min_fraction) / ncol(mytable)
+  is_core = fraction_present >= min_prevalence
+  core_taxa = names(fraction_present)[is_core]
+  
+  # Subset to just the core taxa
+  mycore = prune_taxa(taxa_names(myfraction) %in% core_taxa, myfraction)
+  taxa_names(mycore) = tax_table(mycore)[,rank]
+  
+  # Reformat for plotting
+  samplekey = sample_data(mycore) %>%
+    data.frame() %>%
+    rownames_to_column("SampleID")
+  plotdata = otu_table(mycore) %>%
+    as.data.frame() %>%
+    rownames_to_column("taxon") %>%
+    pivot_longer(cols=-taxon, names_to="SampleID", values_to="abundance") %>%
+    left_join(samplekey, by="SampleID") %>%
+    mutate(abundance_log = log(abundance + min_fraction))
+  
+  # # Get location boundaries - DEPRECATED
+  # locs = samplekey %>%
+  #   arrange(SampleID) %>%
+  #   mutate(x=1:n()) %>%  # Figure out where going to be in plot
+  #   group_by(location) %>%
+  #   summarize(min=min(x), max=max(x), mid=mean(x), .groups="drop")
+  
+  # Make heatmap
+  overall_map = ggplot(plotdata) +
+    aes(x=SampleID, y=taxon, fill=abundance_log) +
+    geom_tile() +
+    theme(axis.text.x = element_text(angle=90))
+    
+  ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.jgw.png", sep=""), width=8, height=5)
+  #return(overall_map)
+
+}
+
+lapply(ranks, make_overall_heatmap, collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
