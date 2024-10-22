@@ -162,7 +162,7 @@ testplot = ggplot(assumptions) +
   geom_text() +
   labs(x="Diversity Metric", y="GVLMA test", title="Test regression assumptions (p-values)") +
   theme(axis.text.x = element_text(angle=90)) +
-  scale_fill_manual(values=c("FALSE"="lightpink", "TRUE"="dodgerblue")) +
+  scale_fill_manual(values=c("FALSE"="lightpink", "TRUE"="dodgerblue")) 
 ggsave(testplot, file="3_GxE/3b_alpha_diversity.gvlma_tests.jgw.png", height=6, width=6)
 
 # Write out GVLMA checks

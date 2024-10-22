@@ -43,6 +43,17 @@ kruskal.results = bind_rows(l1, l2, l3, p1, p2, p3) %>%
   rename(dr=parameter, comparison=data.name)
 write.csv(kruskal.results, file="2_Diversity/2a_alpha_diversity.kruskal_test_results.csv", row.names=FALSE)
 
+# # Check if more complex formulas show a pattern instead; have to use ANOVA
+# # NOTE: Observed is more normal if log-transformed, Shannon as is, Simpson very non-normal both ways
+# both1 = lm(Observed~location * Corrected_pedigree, data = G2F_metadata_2019) %>% anova()
+# both2 = lm(Simpson~location * Corrected_pedigree, data = G2F_metadata_2019) %>% anova()
+# both3 = lm(Shannon~location * Corrected_pedigree, data = G2F_metadata_2019) %>% anova()
+# 
+# # No interactions because lots of missing; lots of gvlma violations
+# m1 = lm(Observed~location + Corrected_pedigree, data = G2F_metadata_2019) %>% gvlma()
+# m2 = lm(Simpson~location + Corrected_pedigree, data = G2F_metadata_2019) %>% gvlma()
+# m3 = lm(Shannon~location + Corrected_pedigree, data = G2F_metadata_2019) %>% gvlma()
+
 
 ##########################
 # plot the alpha diversity 
@@ -100,3 +111,10 @@ alpha_output = G2F_metadata_2019 %>%
   rownames_to_column("sampleID") %>%
   select(sampleID, location, rep_number, plot_number, Corrected_pedigree, Observed, Simpson, Shannon)
 write.csv(alpha_output, file="2_Diversity/2a_alpha_diversity.csv", row.names=FALSE)
+
+
+# # Check alpha after correcting for location
+# ggplot(G2F_metadata_2019) + aes(x=Corrected_pedigree, y=Observed) +
+#   aes(color=Corrected_pedigree) +
+#   geom_point() +
+#   facet_wrap(~location)
