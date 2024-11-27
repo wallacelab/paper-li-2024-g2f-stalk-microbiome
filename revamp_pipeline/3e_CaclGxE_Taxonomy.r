@@ -343,6 +343,13 @@ herits = bind_rows(herits)
 #     )
 #   )
 
+# Calculate fractions that are significant
+significant = herits %>%
+  group_by(level, term) %>%
+  summarize(n=n(), fraction = sum(pval < 0.01)/n(), .groups="drop") %>%
+  mutate(percent = round(fraction*100, digits=1) %>% paste("%", sep=""))
+
+
 # Plot
 herits$level = factor(herits$level, levels=taxa_levels)
 core_taxa_plot <- ggplot(herits) +
@@ -364,11 +371,16 @@ core_taxa_plot <- ggplot(herits) +
   facet_grid(~term) +
   theme(strip.text.x = element_text(size = 30,face="bold"),
     strip.text.y = element_text(size = 30,face="bold" )
-  ) + stat_summary(fun = "mean", geom = "crossbar",  width = 0.5, colour = "black")
+  ) + 
+  stat_summary(fun = "mean", geom = "crossbar",  width = 0.5, colour = "black") +
+  geom_text(data=significant, mapping=aes(label=percent), y=max(herits$herit)* 1.02) +
+  geom_text(data=significant, mapping=aes(label=n), y=max(herits$herit) * 1.05) +
+  ylim(NA, max(herits$herit) * 1.1) # Adjust vertical limit
 
 #core_taxa_plot
 
 #ggsave("/home/hl46161/publish_2019_G2F_dada2/core_taxa_heritibility_plot_0.2.png",core_taxa_plot,height=8, width=12, device="png")
 ggsave(core_taxa_plot, file="3_GxE/3e_taxon_GXE.png", height=8, width=12)
+write.csv(herits, file="3_GxE/3e_taxon_GXE.csv", row.names=FALSE)
 
 #ggsave("/home/hl46161/new_G2F_dada2/exported_table_phyloseq/core_taxa_heritibility_plot_0.25.png",core_taxa_plot,height=15, width=15, device="png") 
