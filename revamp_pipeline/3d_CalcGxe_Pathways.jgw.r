@@ -67,7 +67,7 @@ for(mypath in pathways){
   lm_results[[mypath]] = lm(myformula, data = mydata)
   
   # Determine best boxcox transformation
-  bc = boxcox(mymodel, lambda=seq(-2, 2, 0.05), plotit = FALSE)
+  bc = boxcox(lm_results[[mypath]], lambda=seq(-2, 2, 0.05), plotit = FALSE)
   best = which.max(bc$y)
   lambda = bc$x[best]
   
