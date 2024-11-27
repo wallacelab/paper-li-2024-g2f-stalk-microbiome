@@ -25,7 +25,7 @@ Importantly, these steps are not really meant to be run from a cloned repo, as t
 
 # Step 3 - TODO
 
-
+# TODO - Still need Taxonomy GxE script
 
 
 **Explanation for files**
