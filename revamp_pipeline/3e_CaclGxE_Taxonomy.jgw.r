@@ -42,6 +42,23 @@ core_taxa = lapply(collapsed, function(mydata){
 })
 
 
+##########
+# Quick check/output of prevalence
+##########
+
+prevalence = lapply(names(core_taxa), function(level){
+  mydata = otu_table(core_taxa[[level]])
+  presence = mydata>0
+  prevalence = rowSums(presence) / ncol(mydata)
+  taxstrings = tax_table(core_taxa[[level]]) %>%
+    apply(MARGIN=1, FUN=paste, collapse=";")
+  output = data.frame(level=level, taxon=taxstrings, prevalence=prevalence, mydata) %>%
+    arrange(taxon)
+}) %>% bind_rows()
+  
+write.csv(prevalence, file="3_GxE/3e_taxonomy_prevalence.jgw.csv", row.names=FALSE)
+
+
 ############
 # ANOVA
 ############
@@ -163,3 +180,6 @@ core_taxa_plot <- ggplot(herits) +
 # Save
 ggsave(core_taxa_plot, file="3_GxE/3e_taxon_GXE.jgw.png", height=8, width=12)
 write.csv(herits, file="3_GxE/3e_taxon_GXE.jgw.csv", row.names=FALSE)
+
+
+

@@ -20,6 +20,20 @@ core_taxa = lapply(taxa_levels, function(t){
 })
 names(core_taxa) = taxa_levels
 
+##########
+# Quick check/output of prevalence
+##########
+
+prevalence = lapply(names(core_taxa), function(level){
+  mydata = core_taxa[[level]]
+  presence = mydata>0
+  prevalence = rowSums(presence) / ncol(mydata)
+  output = data.frame(level=level, taxon=rownames(mydata), prevalence=prevalence, mydata)%>%
+    arrange(taxon)
+}) %>% bind_rows()
+write.csv(prevalence, file="3_GxE/3e_taxonomy_prevalence.csv", row.names=FALSE)
+
+
 ############
 # ANOVA calculations
 ############
