@@ -22,7 +22,7 @@ ncores=7 # Number of CPU cores to use for mclapply()
 # Load data 
 
 #asvs = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds")
-asvs = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds")
+asvs = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds") # To be consistent with GxE analysis
 metadata = asvs %>% 
   sample_data() %>%
   data.frame() %>%
@@ -216,7 +216,7 @@ genoplots = lapply(ranks, function(myrank){
 # Overall heatmap of all samples
 ####################
 
-make_overall_heatmap = function(collapsed, rank="Phylum", min_fraction, min_prevalence){
+make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", min_fraction, min_prevalence){
   # Get data and make relative abundance
   mydata=collapsed[[rank]] 
   myfraction = mydata %>%
@@ -224,11 +224,15 @@ make_overall_heatmap = function(collapsed, rank="Phylum", min_fraction, min_prev
   
   # Determine which OTUs count as core
   mytable=otu_table(myfraction)
-  fraction_present = rowSums(mytable >= min_fraction) / ncol(mytable)
+  fraction_present = rowSums(mytable >= min_fraction, na.rm=TRUE) / ncol(mytable)
   is_core = fraction_present >= min_prevalence
   core_taxa = names(fraction_present)[is_core]
   
   # Subset to just the core taxa
+  if(length(core_taxa)==0){
+    cat("No remaining taxa at rank",rank,"\n")
+    return(NULL)
+  }
   mycore = prune_taxa(taxa_names(myfraction) %in% core_taxa, myfraction)
   taxa_names(mycore) = tax_table(mycore)[,rank]
   
@@ -254,11 +258,28 @@ make_overall_heatmap = function(collapsed, rank="Phylum", min_fraction, min_prev
   overall_map = ggplot(plotdata) +
     aes(x=SampleID, y=taxon, fill=abundance_log) +
     geom_tile() +
-    theme(axis.text.x = element_text(angle=90))
-    
-  ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.jgw.png", sep=""), width=8, height=5)
+    theme(axis.text.x = element_blank(), 
+          axis.ticks.x = element_blank(),
+          panel.spacing=unit(0.2, "mm")) +
+    labs(x="Samples")
+
+  # Facet plot by location or genotype if requested
+  if(facet_by=="none"){ 
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.jgw.png", sep=""), width=8, height=5)
+  } else if (facet_by=="location"){
+    overall_map = overall_map +
+      facet_wrap(~location, scales="free_x", nrow=1, strip.position = "bottom")
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.by_location.jgw.png", sep=""), width=13, height=5)
+  } else if(facet_by=="genotype"){
+    overall_map = overall_map +
+      facet_wrap(~pedigree, scales="free_x", nrow=1, strip.position = "bottom") +
+      theme(strip.text = element_text(size=7))
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.by_genotype.jgw.png", sep=""), width=18, height=5)
+  }
   #return(overall_map)
 
 }
 
-lapply(ranks, make_overall_heatmap, collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
+lapply(ranks, make_overall_heatmap, facet_by="none", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
+lapply(ranks, make_overall_heatmap, facet_by="location", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
+lapply(ranks, make_overall_heatmap, facet_by="genotype", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
