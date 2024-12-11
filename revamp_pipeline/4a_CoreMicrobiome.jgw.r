@@ -360,7 +360,8 @@ make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", looku
   ## Paste together
   mynames = apply(mylevels, MARGIN=1, FUN=paste, collapse=" - ") %>%
     gsub(pattern=".__", repl="") %>%
-    gsub(pattern=" ", repl="")
+    gsub(pattern=" ", repl="") %>%
+    sub(pattern="-.+-(.+)", repl=" (\\1)")
   taxa_names(mycore) = mynames
   ## Save original taxon names to pair with loojup for 2-tone plotting
   orig_names = names(mynames)
@@ -430,14 +431,15 @@ make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", looku
   } else if (facet_by=="location"){
     overall_map = overall_map +
       facet_wrap(~location, scales="free_x", nrow=1, strip.position = "bottom") +
-      labs(x="Samples by location")
-    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_twotone_",rank,"_core_microbiome_heatmap.by_location.jgw.png", sep=""), width=13, height=5)
+      labs(x="Samples by location") +
+      theme(strip.text = element_text(size=7))
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_twotone_",rank,"_core_microbiome_heatmap.by_location.jgw.png", sep=""), width=8, height=5)
   } else if(facet_by=="genotype"){
     overall_map = overall_map +
       facet_wrap(~Corrected_pedigree, scales="free_x", nrow=1, strip.position = "bottom") +
-      theme(strip.text = element_text(size=7)) +
+      theme(strip.text = element_text(size=7, angle=90)) +
       labs(x="Samples by Genotype")
-    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_twotone_",rank,"_core_microbiome_heatmap.by_genotype.jgw.png", sep=""), width=18, height=5)
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_twotone_",rank,"_core_microbiome_heatmap.by_genotype.jgw.png", sep=""), width=8, height=5)
   }
   #return(overall_map)
   
