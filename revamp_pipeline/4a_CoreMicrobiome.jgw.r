@@ -9,8 +9,10 @@ library(stringr)
 library(phyloseq)
 library(qiime2R)
 library(parallel)
+library(ggnewscale)
 
 # TODO - How look at Unique vs "Min 10 locations" subcores?
+# TODO - Color the by-geno and by-loc plots differently depending on if is core in that section or not
 
 
 # Global variables
@@ -103,10 +105,16 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
     ) +
     labs(y = myrank, x=xval, 
          title=paste("Core microbiome of samples (only counts when >=",min_fraction,"of a sample)") )+
-  scale_fill_gradientn(colors=colorscale, values=colorbreaks)
+  scale_fill_gradientn(colors=colorscale, values=colorbreaks) +
+    scale_y_discrete(limits=rev)   # Reverse Y axis
   
   # Save plot
   ggsave(myplot, file=outfile, height=8, width=12)
+}
+
+# Make a quick lookup key from 2 vectors (e.g., location and taxon) (putting here so is consistent)
+make_lookup = function(x, y){
+  paste(x,y, sep="_")
 }
 
 ##########
@@ -157,6 +165,15 @@ locplots = lapply(ranks, function(myrank){
   plot_heatmap_custom(mycore, myrank, xval="location", outfile=outfile, plot_all=TRUE)
   
 })
+
+# Make a quick lookup key to check for what is core (for later)
+location_core_key = lapply(ranks, function(r){
+  mycore = location_cores[[r]]
+  make_lookup(mycore$location, mycore$taxon)
+  mykey = data.frame(location=mycore$location, taxon=mycore$taxon,
+                     key = make_lookup(mycore$location, mycore$taxon))
+})
+names(location_core_key) = ranks
 
 # # TODO - Still to look at - Subset to just those taxa that are "core" in a single location
 # unique_location_genus_core_microbiome_list <- location_genus_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() <= 1)
@@ -212,11 +229,20 @@ genoplots = lapply(ranks, function(myrank){
   
 })
 
+# Make a quick lookup key to check for what is core (for later)
+geno_core_key = lapply(ranks, function(r){
+  mycore = genotype_cores[[r]]
+  mykey = data.frame(geno=mycore$Corrected_pedigree, taxon=mycore$taxon,
+                     key = make_lookup(mycore$Corrected_pedigree, mycore$taxon))
+})
+names(geno_core_key) = ranks
+
 ####################
 # Overall heatmap of all samples
 ####################
 
-make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", min_fraction, min_prevalence){
+make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", 
+                                min_fraction, min_prevalence, mybreaks){
   # Get data and make relative abundance
   mydata=collapsed[[rank]] 
   myfraction = mydata %>%
@@ -227,6 +253,96 @@ make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", min_f
   fraction_present = rowSums(mytable >= min_fraction, na.rm=TRUE) / ncol(mytable)
   is_core = fraction_present >= min_prevalence
   core_taxa = names(fraction_present)[is_core]
+
+  # Subset to just the core taxa
+  if(length(core_taxa)==0){
+    cat("No remaining taxa at rank",rank,"\n")
+    return(NULL)
+  }
+  mycore = prune_taxa(taxa_names(myfraction) %in% core_taxa, myfraction)
+  # taxa_names(mycore) = tax_table(mycore)[,rank]
+  
+  # Make taxa names
+  taxlevels = mycore %>% tax_table() %>% colnames()
+  thisrank = which(taxlevels==rank)
+  phyrank = which(taxlevels=="Phylum")
+  mylevels = tax_table(mycore)[,phyrank:thisrank]
+  ## Paste together
+  mynames = apply(mylevels, MARGIN=1, FUN=paste, collapse=" - ") %>%
+    gsub(pattern=".__", repl="") %>%
+    gsub(pattern=" ", repl="")
+  taxa_names(mycore) = mynames
+
+  # Reformat for plotting
+  samplekey = sample_data(mycore) %>%
+    data.frame() %>%
+    rownames_to_column("SampleID")
+  plotdata = otu_table(mycore) %>%
+    as.data.frame() %>%
+    rownames_to_column("taxon") %>%
+    pivot_longer(cols=-taxon, names_to="SampleID", values_to="abundance") %>%
+    left_join(samplekey, by="SampleID") %>%
+    mutate(abundance_adj = abundance + min_fraction,
+           abundance_log = log(abundance_adj))
+  
+
+  # Make heatmap
+  overall_map = ggplot(plotdata) +
+    #aes(x=SampleID, y=taxon, fill=abundance_log) +
+    aes(x=SampleID, y=taxon, fill=abundance_adj) +
+    geom_tile() +
+    theme(axis.text.x = element_blank(), 
+          axis.ticks.x = element_blank(),
+          panel.spacing=unit(0.2, "mm"),
+          axis.title = element_text(face="bold", size=14),
+          legend.title = element_text(face="bold", size=12)) +
+    scale_y_discrete(limits=rev)  + # Reverse Y axis
+    scale_fill_gradient(trans = "log", breaks=mybreaks, limits=range(mybreaks)) +
+    labs(fill=str_wrap("Relative Abundance", width=10),
+         y=paste("Taxonomic",rank))
+
+  # Facet plot by location or genotype if requested
+  if(facet_by=="none"){ 
+    overall_map = overall_map +
+      labs(x="Samples")
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.jgw.png", sep=""), width=8, height=5)
+  } else if (facet_by=="location"){
+    overall_map = overall_map +
+      facet_wrap(~location, scales="free_x", nrow=1, strip.position = "bottom") +
+      labs(x="Samples by location")
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.by_location.jgw.png", sep=""), width=13, height=5)
+  } else if(facet_by=="genotype"){
+    overall_map = overall_map +
+      facet_wrap(~Corrected_pedigree, scales="free_x", nrow=1, strip.position = "bottom") +
+      theme(strip.text = element_text(size=7)) +
+      labs(x="Samples by Genotype")
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.by_genotype.jgw.png", sep=""), width=18, height=5)
+  }
+  #return(overall_map)
+
+}
+
+mybreaks = c(0.001, 0.01, 0.1, 1)
+lapply(ranks, make_overall_heatmap, facet_by="none", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence, mybreaks=mybreaks)
+lapply(ranks, make_overall_heatmap, facet_by="location", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence, mybreaks=mybreaks)
+lapply(ranks, make_overall_heatmap, facet_by="genotype", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence, mybreaks=mybreaks)
+
+
+
+
+####################
+# Overall heatmap with 2-tone coloring
+####################
+
+make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", lookup_key, mybreaks){
+  # Get data and make relative abundance
+  mydata=collapsed[[rank]] 
+  myfraction = mydata %>%
+    transform_sample_counts(fun=function(x) x / sum(x) )
+  
+  # Determine which OTUs count as core
+  mylookup = lookup_key[[rank]]
+  core_taxa = unique(mylookup$taxon)
   
   # Subset to just the core taxa
   if(length(core_taxa)==0){
@@ -234,7 +350,21 @@ make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", min_f
     return(NULL)
   }
   mycore = prune_taxa(taxa_names(myfraction) %in% core_taxa, myfraction)
-  taxa_names(mycore) = tax_table(mycore)[,rank]
+  # taxa_names(mycore) = tax_table(mycore)[,rank]
+  
+  # Make taxa names
+  taxlevels = mycore %>% tax_table() %>% colnames()
+  thisrank = which(taxlevels==rank)
+  phyrank = which(taxlevels=="Phylum")
+  mylevels = tax_table(mycore)[,phyrank:thisrank]
+  ## Paste together
+  mynames = apply(mylevels, MARGIN=1, FUN=paste, collapse=" - ") %>%
+    gsub(pattern=".__", repl="") %>%
+    gsub(pattern=" ", repl="")
+  taxa_names(mycore) = mynames
+  ## Save original taxon names to pair with loojup for 2-tone plotting
+  orig_names = names(mynames)
+  names(orig_names) = mynames
   
   # Reformat for plotting
   samplekey = sample_data(mycore) %>%
@@ -245,41 +375,74 @@ make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", min_f
     rownames_to_column("taxon") %>%
     pivot_longer(cols=-taxon, names_to="SampleID", values_to="abundance") %>%
     left_join(samplekey, by="SampleID") %>%
-    mutate(abundance_log = log(abundance + min_fraction))
+    mutate(abundance_adj = abundance + min_fraction,
+           abundance_log = log(abundance_adj),
+           orig_name = orig_names[taxon])
   
-  # # Get location boundaries - DEPRECATED
-  # locs = samplekey %>%
-  #   arrange(SampleID) %>%
-  #   mutate(x=1:n()) %>%  # Figure out where going to be in plot
-  #   group_by(location) %>%
-  #   summarize(min=min(x), max=max(x), mid=mean(x), .groups="drop")
+  # Take lookup key into account (for two-tone coloring)
+  if(facet_by == "genotype" && !is.null(lookup_key)){
+    plotdata$key = make_lookup(plotdata$Corrected_pedigree, plotdata$orig_name)
+    plotdata$is_core = plotdata$key %in% mylookup$key
+  } else if(facet_by == "location" && !is.null(lookup_key)){
+    plotdata$key = make_lookup(plotdata$location, plotdata$orig_name)
+    plotdata$is_core = plotdata$key %in% mylookup$key
+  } else{
+    plotdata$is_core = TRUE  # Set to all true by default
+  }
   
   # Make heatmap
   overall_map = ggplot(plotdata) +
-    aes(x=SampleID, y=taxon, fill=abundance_log) +
+    #aes(x=SampleID, y=taxon, fill=abundance_log) +
+    aes(x=SampleID, y=taxon, fill=abundance_adj) +
     geom_tile() +
     theme(axis.text.x = element_blank(), 
           axis.ticks.x = element_blank(),
-          panel.spacing=unit(0.2, "mm")) +
-    labs(x="Samples")
-
+          panel.spacing=unit(0.2, "mm"),
+          axis.title = element_text(face="bold", size=14),
+          legend.title = element_text(face="bold", size=12)) +
+    scale_y_discrete(limits=rev)  + # Reverse Y axis
+    scale_fill_gradient(trans = "log", breaks=mybreaks, limits=range(mybreaks),
+                        low="#000000", high="#56B1F7",
+                        guide=guide_legend(order=1, reverse=TRUE,
+                                           title=str_wrap("Relative Abundance (core)", width=10))) +
+    labs(#fill=str_wrap("Relative Abundance (core)", width=10),
+         y=paste("Taxonomic",rank))
+  
+  # Deal with coloring for core/noncore (but only if there are noncore things to plot)
+  if(any(!plotdata$is_core)){
+    overall_map = overall_map +
+      ggnewscale::new_scale_fill() +
+      aes(x=SampleID, y=taxon, fill=abundance_adj) +
+      geom_tile(mapping=aes(alpha=as.integer(!is_core))) +
+      scale_fill_gradient(trans = "log", breaks=mybreaks, limits=range(mybreaks),
+                          low="#000000", high="#f75656",
+                          guide=guide_legend(order=2, reverse=TRUE,
+                                             title=str_wrap("Relative Abundance (noncore)", width=10))) +
+      scale_alpha_continuous(guide="none")
+    
+  }
+  
   # Facet plot by location or genotype if requested
   if(facet_by=="none"){ 
-    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.jgw.png", sep=""), width=8, height=5)
+    overall_map = overall_map +
+      labs(x="Samples by location")
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_twotone_",rank,"_core_microbiome_heatmap.jgw.png", sep=""), width=8, height=5)
   } else if (facet_by=="location"){
     overall_map = overall_map +
-      facet_wrap(~location, scales="free_x", nrow=1, strip.position = "bottom")
-    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.by_location.jgw.png", sep=""), width=13, height=5)
+      facet_wrap(~location, scales="free_x", nrow=1, strip.position = "bottom") +
+      labs(x="Samples by location")
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_twotone_",rank,"_core_microbiome_heatmap.by_location.jgw.png", sep=""), width=13, height=5)
   } else if(facet_by=="genotype"){
     overall_map = overall_map +
-      facet_wrap(~pedigree, scales="free_x", nrow=1, strip.position = "bottom") +
-      theme(strip.text = element_text(size=7))
-    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_overall_",rank,"_core_microbiome_heatmap.by_genotype.jgw.png", sep=""), width=18, height=5)
+      facet_wrap(~Corrected_pedigree, scales="free_x", nrow=1, strip.position = "bottom") +
+      theme(strip.text = element_text(size=7)) +
+      labs(x="Samples by Genotype")
+    ggsave(overall_map, file=paste("4_CoreMicrobiome/4b_twotone_",rank,"_core_microbiome_heatmap.by_genotype.jgw.png", sep=""), width=18, height=5)
   }
   #return(overall_map)
-
+  
 }
 
-lapply(ranks, make_overall_heatmap, facet_by="none", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
-lapply(ranks, make_overall_heatmap, facet_by="location", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
-lapply(ranks, make_overall_heatmap, facet_by="genotype", collapsed=collapsed_taxa, min_fraction=min_fraction, min_prevalence=min_prevalence)
+mybreaks = c(0.001, 0.01, 0.1, 1)
+lapply(ranks, make_overall_heatmap, facet_by="location", lookup_key = location_core_key, collapsed=collapsed_taxa, mybreaks=mybreaks)
+lapply(ranks, make_overall_heatmap, facet_by="genotype", lookup_key = geno_core_key, collapsed=collapsed_taxa, mybreaks=mybreaks)
