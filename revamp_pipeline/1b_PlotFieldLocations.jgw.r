@@ -50,7 +50,7 @@ plotdata = plotdata %>% mutate(region = case_when(
 ncolors = sum(plotdata$sampled)
 plotdata$location_color=NA
 plotdata$location_color[!plotdata$sampled]="gray50" # Gray for unsampled locations
-plotdata$location_color[plotdata$sampled]= pals::kelly()[1:ncolors + 1]  # +1 offset to avoid light gray
+plotdata$location_color[plotdata$sampled]= pals::kelly()[1:ncolors + 2]  # +2 offset to avoid light gray & make higher contrast among sites in same region
 ## Make a variable for use later
 lockey = plotdata$location_color
 names(lockey) = plotdata$location

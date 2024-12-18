@@ -4,12 +4,8 @@ library(tidyverse)
 library(rbiom)
 library(qiime2R) # Provides the read_qza function
 library(ggpubr)
-library(pals) # Extended palettes
 
 # Beta Diversity Analysis Using Weighted and Unweighted UniFrac Distances
-
-# Note: Region colors came from: https://davidmathlogic.com/colorblind/
-# Location colors came from the kelly() palette in the pals library  
 
 #####
 # Load data
@@ -17,6 +13,7 @@ library(pals) # Extended palettes
 
 #asvs = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.yellow_stripe.phyloseq.rds")
 asvs = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds")
+lockey = read.csv("1_parsed_files/1b_location_key.csv") # Location key for colors, etc
 
 # Extract components for easier manipulation
 counts = otu_table(asvs)
@@ -49,16 +46,24 @@ plotdata = lapply(pcs, function(p){
   # Combine with metadata and reformat
   p$plotdata = bind_cols(p$points, metadata) %>%
     rownames_to_column("sample") %>%
-    mutate(region = case_when(
-      location %in% c("MOH1", "IAH2", "IAH4", "MNH1", "NEH1", "NEH2") ~ "Midwest",
-      location %in% c("WIH1", "INH1", "MIH1", "OHH1") ~ "East Mississippi River",
-      location %in% c("GAH1", "GAH2", "SCH1", "NCH1") ~ "South",
-      location %in% c("NYH2", "NYH3", "DEH1") ~ "Northeast"
-    ))
+    left_join(lockey, by="location") 
+    # mutate(region = case_when(
+    #   location %in% c("MOH1", "IAH2", "IAH4", "MNH1", "NEH1", "NEH2") ~ "Midwest",
+    #   location %in% c("WIH1", "INH1", "MIH1", "OHH1") ~ "East Mississippi River",
+    #   location %in% c("GAH1", "GAH2", "SCH1", "NCH1") ~ "South",
+    #   location %in% c("NYH2", "NYH3", "DEH1") ~ "Northeast"
+    # ))
   return(p)
 })
 
-# Plot, colored by region. Colorblind-friendly palette from 
+# Make color keys
+regionkey = lockey %>%
+  dplyr::select(region, region_color) %>%
+  unique() 
+colors.region = setNames(regionkey$region_color, regionkey$region)
+colors.location = setNames(lockey$location_color, lockey$location)
+
+# Plot, colored by region
 plots.region = lapply(names(plotdata), function(metric){
   mydata=plotdata[[metric]]
   ggplot(mydata$plotdata) +
@@ -66,7 +71,8 @@ plots.region = lapply(names(plotdata), function(metric){
     geom_point(size = 2, alpha = 0.8) +
     labs(x = mydata$axis_labels[1], y=mydata$axis_labels[2],
          title=metric, color="Region") +
-    scale_colour_manual(values = c("#FFC107", "#D81B60", "#1E88E5", "#004D40"))
+    #scale_colour_manual(values = c("#FFC107", "#D81B60", "#1E88E5", "#004D40"))
+    scale_colour_manual(values = colors.region)
 })
 
 regionplot = ggarrange(plotlist=plots.region, nrow=1, common.legend=TRUE, legend="bottom")
@@ -82,9 +88,7 @@ plots.location = lapply(names(plotdata), function(metric){
     geom_point(size = 2, alpha = 0.8) +
     labs(x = mydata$axis_labels[1], y=mydata$axis_labels[2],
          title=metric, color="Location") +
-    scale_color_manual(values=pals::kelly()[1:nloc  + 1] ) # +1 offset to avoid light gray
-    #scale_color_brewer(palette="Dark2") #+
-    #scale_colour_manual(values = c("#FFC107", "#D81B60", "#1E88E5", "#004D40"))
+    scale_color_manual(values=colors.location )
 })
 
 locationplot = ggarrange(plotlist=plots.location, nrow=1, common.legend=TRUE, legend="bottom")
@@ -101,7 +105,7 @@ plots.split = lapply(names(plotdata), function(metric){
     labs(x = mydata$axis_labels[1], y=mydata$axis_labels[2],
          title=metric, color="Location") +
     facet_wrap(~region, ncol=1) +
-    scale_color_manual(values=pals::kelly()[1:nloc + 1] ) # +1 offset to avoid light gray
+    scale_color_manual(values=colors.location )
 })
 
 splitplot = ggarrange(plotlist=plots.split, nrow=1, common.legend=TRUE, legend="bottom")
