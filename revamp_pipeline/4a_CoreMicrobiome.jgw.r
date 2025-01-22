@@ -11,9 +11,6 @@ library(qiime2R)
 library(parallel)
 library(ggnewscale)
 
-# TODO - How look at Unique vs "Min 10 locations" subcores?
-# TODO - Color the by-geno and by-loc plots differently depending on if is core in that section or not
-
 
 # Global variables
 min_fraction = 0.001 # Min fraction of a sample an OTU has to consist of to "count" for core calculations
@@ -174,20 +171,6 @@ location_core_key = lapply(ranks, function(r){
                      key = make_lookup(mycore$location, mycore$taxon))
 })
 names(location_core_key) = ranks
-
-# # TODO - Still to look at - Subset to just those taxa that are "core" in a single location
-# unique_location_genus_core_microbiome_list <- location_genus_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() <= 1)
-# unique_location_family_core_microbiome_list <- location_family_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() <= 1)
-# unique_location_order_core_microbiome_list <- location_order_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() <= 1)
-# unique_location_class_core_microbiome_list <- location_class_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() <= 1)
-# unique_location_phylumn_core_microbiome_list <- location_phylumn_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() <= 1)
-
-# # TODO - still to look at - Subset to those taxa that are "core" in at least 10 locations
-# common_location_genus_core_microbiome_list <- location_genus_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() >= 10)
-# common_location_family_core_microbiome_list <- location_family_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() >= 10)
-# common_location_order_core_microbiome_list <- location_order_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() >= 10)
-# common_location_class_core_microbiome_list <- location_class_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() >= 10)
-# common_location_phylumn_core_microbiome_list <- location_phylumn_core_microbiome_list  %>% group_by(Taxaname) %>% filter(n() >= 10)
 
 
 ##################
@@ -448,3 +431,74 @@ make_overall_heatmap = function(collapsed, rank="Phylum", facet_by="none", looku
 mybreaks = c(0.001, 0.01, 0.1, 1)
 lapply(ranks, make_overall_heatmap, facet_by="location", lookup_key = location_core_key, collapsed=collapsed_taxa, mybreaks=mybreaks)
 lapply(ranks, make_overall_heatmap, facet_by="genotype", lookup_key = geno_core_key, collapsed=collapsed_taxa, mybreaks=mybreaks)
+
+
+##############
+# Output tables of results
+##############
+
+#The location_cores_all and genotype_cores_all lists have prevalence for everything
+
+# Helper to turn the *_core_all into an output table
+make_output_table = function(mydata){
+  lapply(ranks, function(myrank){
+    mydata[[myrank]] %>%
+      mutate(taxon_level=myrank, is_core = prevalence >= min_prevalence) %>%
+      relocate(taxon_level) 
+  }) %>%
+    bind_rows() %>%
+    rename(taxon_name = Taxaname) %>%
+    mutate(taxon_name = sub(taxon_name, pattern="(;NA)+", repl=""),
+           prevalence = round(prevalence, digits=3),
+           taxon_level = factor(taxon_level, levels=ranks))
+}
+
+summarize_cores = function(mydata){
+  mydata %>%
+    group_by(taxon_level, taxon_name) %>%
+    summarize(fraction_core = sum(prevalence >= min_prevalence) / n()) %>%
+    relocate(taxon_level, fraction_core) %>%
+    mutate(taxon_level = factor(taxon_level, levels=ranks),
+           fraction_core = round(fraction_core, digits=3)) %>%
+    arrange(as.numeric(taxon_level), desc(fraction_core), taxon_name)
+}
+
+# Make location table
+location_cores_output = make_output_table(location_cores_all) %>%
+  select(taxon_level, location, prevalence, is_core, taxon_name) %>%
+  arrange(as.numeric(taxon_level), taxon_name, location)
+write.csv(location_cores_output, file="4_CoreMicrobiome/4c_prevalence.locations.csv", row.names=FALSE)
+
+# Calculate how often is core across locations
+location_summary = summarize_cores(location_cores_output)
+write.csv(location_summary, file="4_CoreMicrobiome/4c_prevalence_summary.locations.csv", row.names=FALSE)
+
+# Make genotype table
+genotype_cores_output = make_output_table(genotype_cores_all) %>%
+  rename(genotype="Corrected_pedigree") %>%
+  select(taxon_level, genotype, prevalence, is_core, taxon_name) %>%
+  arrange(as.numeric(taxon_level), taxon_name, genotype)
+write.csv(location_cores_output, file="4_CoreMicrobiome/4c_prevalence.genotypes.csv", row.names=FALSE)
+
+# Calculate how often is core across locations
+location_summary = summarize_cores(location_cores_output)
+write.csv(location_summary, file="4_CoreMicrobiome/4c_prevalence_summary.genotypes.csv", row.names=FALSE)
+
+
+# Now need to make the overall table
+overall_prevalence = lapply(ranks, function(myrank){
+  prevalence = preparse[[myrank]] %>%
+    #filter(fraction >= min_fraction) %>%
+    group_by(taxon, Taxaname) %>%
+    summarize(prevalence = sum(present) / n(), .groups="drop")
+  return(prevalence)
+})
+names(overall_prevalence) = ranks
+
+# And write out (this is already basically at the summary level, since is by individual samples)
+overall_cores_output = make_output_table(overall_prevalence) %>%
+  select(taxon_level, prevalence, is_core, taxon_name) %>%
+  arrange(as.numeric(taxon_level), desc(prevalence), taxon_name)
+write.csv(overall_cores_output, file="4_CoreMicrobiome/4c_prevalence_summary.overall.csv", row.names=FALSE)
+
+

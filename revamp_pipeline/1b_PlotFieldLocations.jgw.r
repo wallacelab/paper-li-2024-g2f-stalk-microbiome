@@ -59,7 +59,7 @@ lockey = plotdata$location_color
 names(lockey) = plotdata$location
 
 # Define region color key; colorblind-friendly palette from https://davidmathlogic.com/colorblind/
-regionkey = c("Midwest (East)" = "#cd9a00",
+regionkey = c("Midwest (East)" = "#cd9a00",  # Slightly darker than original for easier visibility
               "Midwest (West)" = "#D81B60", 
               "Northeast" = "#1E88E5", 
               "South" = "#004D40", 
@@ -142,10 +142,6 @@ regions = data.frame(region = names(regionkey),
                      latitude =c( 38.5,    37.7,    40.7,   34.0,   0),  # 0 is for "other"
                      longitude=c(-85,  -94.6,      -76,  -79.5,   0))
   
-  
-  # final %>%
-  # group_by(region, region_color) %>%
-  # summarize(latitude = mean(latitude), longitude=mean(longitude), .groups="drop")
 
 # Final graphic for publication
 pubplot = basemap(mymap, xlim=c(-100, -70), ylim=c(29, 47)) +
