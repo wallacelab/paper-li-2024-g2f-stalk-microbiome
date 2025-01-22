@@ -90,17 +90,44 @@ readcounts.bysample = lapply(levels, function(mylevel){
          set=factor(set, levels=c("noncore", "core"))) 
 
 # Summarize
-core.bysample %>%
+bysample_summary = core.bysample %>%
   group_by(level) %>%
-  summarize(mean_percent = mean(percent), median_percent = median(percent))
+  summarize(mean_percent = mean(percent), median_percent = median(percent)) %>%
+  mutate(label = paste(round(mean_percent * 100, 1), "%", sep=""))
 
 
 # Plot distribution by samples
 core.bysample = filter(readcounts.bysample, set=="core")
-myplot = ggplot(core.bysample) +
+coreplot = ggplot(core.bysample) +
   aes(x=level, y=percent) +
   geom_violin(fill="lightblue") +
   labs(x="Taxonomic level", y="Percent of Reads") +
-  stat_summary(fun="mean", geom="crossbar", width=0.5)
+  #stat_summary(fun="mean", geom="crossbar", width=0.5) +  # Mean bar
+  geom_label(data=bysample_summary, mapping=aes(x=level, y=mean_percent, label=label),
+             color="black", size=3)
+
+ggsave(coreplot, file="4_CoreMicrobiome/4d_core_percent_by_sample.png", width=4, height=3)
 
 
+
+############
+# Lineplot of decay across percentage of samples
+############
+
+# Calculate what % of taxa at each level are retained
+prev.split = split(prevalence, prevalence$taxon_level)
+stepdown = lapply(names(prev.split), function(mylevel){
+  myprev = prev.split[[mylevel]]
+  steps=(0:100) / 100
+  percent = sapply(steps, function(s){
+    sum(myprev$prevalence >= s) / nrow(myprev)
+  })
+  data.frame(level = mylevel, steps, percent)
+}) %>%
+  bind_rows() %>%
+  mutate(level = factor(level, levels = unique(prevalence$taxon_level)))
+
+# Plot
+ggplot(stepdown) +
+  aes(x=steps, y=percent, color=level) +
+  geom_line()
