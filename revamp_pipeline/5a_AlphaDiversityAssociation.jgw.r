@@ -114,7 +114,8 @@ plot_diversity_vs_soil_pH <- function(df, x_var, y_var, xlab, ylab) {
     geom_point(size = 4) +
     geom_smooth(method = "lm", se = TRUE, fullrange = TRUE) +
     #stat_cor(size=14, cor.coef.name="R", label.y = max(plotdata$y) * 1.025) + 
-    annotate("text" ,  x=Inf, y = Inf, label = paste("p =",pvalue), vjust=1, hjust=1))
+    annotate("text" ,  x=-Inf, y = -Inf, label = paste("p =",pvalue), vjust=-1, hjust=-0.1,
+             size=12) +
     labs(x = xlab, y = ylab) +
     theme(
       legend.text = element_text(color = "black", size = 30),
@@ -138,7 +139,8 @@ soilplots = lapply(metrics, function(mymetric){
   plot_diversity_vs_soil_pH(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data,
                             "X1.1.Soil.pH", mymetric, xlab = "Soil pH", ylab = mylabel)
 })
-soilplots = ggarrange(plotlist = soilplots, nrow=1)
+soilplots = ggarrange(plotlist = soilplots, nrow=1, labels=LETTERS[1:3], 
+                      font.label=list(size=36, face="bold"), vjust=1)
 ggsave(soilplots, file="5_Associations/5a_median_alpha_diversity_plot.soil_ph.jgw.png", height = 8, width = 24, device = "png")
 
 # Soil buffering capacity
@@ -147,7 +149,8 @@ bufferplots = lapply(metrics, function(mymetric){
   plot_diversity_vs_soil_pH(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data,
                             "WDRF.Buffer.pH", mymetric, xlab = "WDRF buffer pH", ylab=mylabel)
 })
-bufferplots = ggarrange(plotlist = bufferplots, nrow=1)
+bufferplots = ggarrange(plotlist = bufferplots, nrow=1, labels=LETTERS[4:6], 
+                        font.label=list(size=36, face="bold"), vjust=1)
 ggsave(bufferplots, file="5_Associations/5a_median_alpha_diversity_plot.buffer_ph.jgw.png", height = 8, width = 24, device = "png")
 
 
