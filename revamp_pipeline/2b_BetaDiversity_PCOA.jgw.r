@@ -32,6 +32,17 @@ betas[['Bray-Curtis']] = rbiom::beta.div(counts, method="bray-curtis")
 # Calculate PCs
 pcs = lapply(betas, cmdscale, eig=TRUE)
 
+# Write out distance matrices and PCs for later
+for(metric in names(betas)){
+  distance_file = paste("2_Diversity/2b_beta_diversity.", metric, ".distance.csv", sep="") %>%
+    gsub(pattern=" ", repl="_")
+  pc_file = sub(distance_file, pattern=".distance.", repl=".pcs.", fixed=T)
+  write.csv(as.matrix(betas[[metric]]), file=distance_file)
+  write.csv(pcs[[metric]]$points, file=pc_file)
+}
+
+
+
 ########
 # Plot
 ########
