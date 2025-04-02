@@ -82,19 +82,26 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
   
   # Set which variable is on X axis
   mycore$xval = mycore[,xval] %>% unlist()
-  
+
+  # Set significance marker
+  mycore$significant = ifelse(mycore$prevalence >= min_prevalence,
+                              yes="*", no="")
+    
   # Set mapping aesthetics
-  my_aes = aes(x=xval, y=plot_taxon)
+  my_aes = aes(x=xval, y=plot_taxon, label=significant)
   if(plot_all){ # Add prevalence as a fill if specified
-    my_aes = aes(x=xval, y=plot_taxon, fill=prevalence)
+    my_aes = aes(x=xval, y=plot_taxon, label=significant, fill=prevalence)
   }
   
   # Make plot
-  colorscale = c("#000000","#2b2b2b", "#000080","#0000FF")
-  colorbreaks = c(0, min_prevalence*0.999, min_prevalence, 1)
+  #colorscale = c("#000000","#2b2b2b", "#000080","#0000FF")
+  #colorbreaks = c(0, min_prevalence*0.999, min_prevalence, 1)
+  colorscale = c("#FFFFFF","#0000dd")
+  colorbreaks = c(0, 1)
   myplot = ggplot(mycore) +
     my_aes +
     geom_tile() + 
+    geom_text(color="white") +
     theme(
       axis.text = element_text(size=15, face="bold"),
       axis.text.x = element_text(angle=90),
