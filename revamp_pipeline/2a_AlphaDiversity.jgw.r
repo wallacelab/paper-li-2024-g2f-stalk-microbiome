@@ -77,34 +77,40 @@ mytheme = theme(
   axis.title.y = element_text(size=20, face="bold"),
   plot.title = element_text(size=20, face="bold"),
   axis.text.y = element_text(size=20, face="bold"),
-  axis.text.x = element_text(size=20, face="bold"),
+  axis.text.x = element_text(size=16, face="bold"),
   strip.text.x = element_text(size=20,face="bold"),
   panel.background = element_blank()
 )
 
 Shannon_location <- plot_richness(ps.locs, x="location", measures=c("Shannon")) +
   geom_boxplot(fill="darkred") +
-  mytheme
+  mytheme +
+  labs(x="Location")
 
 Observed_location <- plot_richness(ps.locs, x="location", measures=c("Observed")) + 
   geom_boxplot(fill="darkred") +
-  mytheme
+  mytheme +
+  labs(x="Location")
 
 Simpson_location <- plot_richness(ps.locs, x="location", measures=c("Simpson")) +
   geom_boxplot(fill="darkred") + 
-  mytheme
+  mytheme +
+  labs(x="Location")
 
 Shannon_pedigree <- plot_richness(ps.genos, x="Corrected_pedigree", measures=c("Shannon")) + 
   geom_boxplot(fill="darkgreen") + 
-  mytheme
+  mytheme +
+  labs(x="Genotype")
 
 Observed_pedigree <- plot_richness(ps.genos, x="Corrected_pedigree", measures=c("Observed")) +
   geom_boxplot(fill="darkgreen") + 
-  mytheme
+  mytheme +
+  labs(x="Genotype")
 
 Simpson_pedigree <- plot_richness(ps.genos, x="Corrected_pedigree", measures=c("Simpson")) + 
   geom_boxplot(fill="darkgreen") + 
-  mytheme
+  mytheme+
+  labs(x="Genotype")
 
 # Save plots
 alphaplots = grid.arrange(grobs=list(Shannon_location, Observed_location, Simpson_location,

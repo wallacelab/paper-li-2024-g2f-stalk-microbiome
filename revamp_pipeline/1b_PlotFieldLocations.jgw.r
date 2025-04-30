@@ -41,8 +41,8 @@ plotdata$pass_filters = plotdata$location %in% filtered_locs
 
 # Group into regions
 plotdata = plotdata %>% mutate(region = case_when(
-  location %in% c("IAH1", "IAH2", "IAH3", "IAH4", "ILH1", "MNH1", "MOH1", "NEH1", "NEH2") ~ "Midwest (West)",
-  location %in% c("INH1", "MIH1", "OHH1", "WIH1", "WIH2") ~ "Midwest (East)",
+  location %in% c("IAH1", "IAH2", "IAH3", "IAH4", "ILH1", "MNH1", "MOH1", "NEH1", "NEH2") ~ "West",
+  location %in% c("INH1", "MIH1", "OHH1", "WIH1", "WIH2") ~ "Central",
   location %in% c("GAH1", "GAH2", "NCH1", "SCH1", "TXH1", "TXH2", "TXH3", "TXH4") ~ "South",
   location %in% c("DEH1", "NYH1", "NYH2", "NYH3") ~ "Northeast",
   location %in% c("COH1", "GEH1", "ONH2") ~ "Other"
@@ -59,8 +59,8 @@ lockey = plotdata$location_color
 names(lockey) = plotdata$location
 
 # Define region color key; colorblind-friendly palette from https://davidmathlogic.com/colorblind/
-regionkey = c("Midwest (East)" = "#cd9a00",  # Slightly darker than original for easier visibility
-              "Midwest (West)" = "#D81B60", 
+regionkey = c("Central" = "#cd9a00",  # Slightly darker than original for easier visibility
+              "West" = "#D81B60", 
               "Northeast" = "#1E88E5", 
               "South" = "#004D40", 
               "Other" = "gray50")
@@ -139,8 +139,8 @@ ggsave(sampleplot, file="1_parsed_files/1b_g2f_locations.by_location.sampled.png
 final$abbreviation = sub(final$location, pattern="H.$", repl="")
 regions = data.frame(region = names(regionkey), 
                      region_color=regionkey,
-                     latitude =c( 38.5,    37.7,    40.7,   34.0,   0),  # 0 is for "other"
-                     longitude=c(-85,  -94.6,      -76,  -79.5,   0))
+                     latitude =c( 38.5,    40.5,    40.7,   34.0,   0),  # 0 is for "other"
+                     longitude=c(-85,  -93.6,      -76,  -79.5,   0))
   
 
 # Final graphic for publication

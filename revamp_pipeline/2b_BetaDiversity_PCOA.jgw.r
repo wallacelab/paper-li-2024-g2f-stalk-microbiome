@@ -4,6 +4,7 @@ library(tidyverse)
 library(rbiom)
 library(qiime2R) # Provides the read_qza function
 library(ggpubr)
+library(Rtsne) # For tSNE plot
 
 # Beta Diversity Analysis Using Weighted and Unweighted UniFrac Distances
 
@@ -123,8 +124,8 @@ ggsave(splitplot, file="2_Diversity/2b_beta_diversity.split.jgw.png", width=8, h
 
 # Overall plot
 metric='Weighted Unifrac'
-regions = unique(mydata$plotdata$region) %>% sort()
 mydata=plotdata[[metric]]
+regions = unique(mydata$plotdata$region) %>% sort()
 pub.overall = ggplot(mydata$plotdata) +
   aes(x = PC1, y = PC2, color = region) +
   geom_point(size = 2, alpha = 0.8) +
@@ -162,3 +163,83 @@ ggsave(pubplot, file="2_Diversity/2b_beta_diversity.publication.jgw.png", width=
 
 
 
+##############
+# Supplemental - Unweighted
+##############
+
+
+
+# Overall plot
+metric='Unweighted Unifrac'
+mydata=plotdata[[metric]]
+regions = unique(mydata$plotdata$region) %>% sort()
+pub.overall = ggplot(mydata$plotdata) +
+  aes(x = PC1, y = PC2, color = region) +
+  geom_point(size = 2, alpha = 0.8) +
+  labs(x = mydata$axis_labels[1], y=mydata$axis_labels[2],
+       title=metric, color="Region") +
+  scale_color_manual(values=colors.region ) +
+  theme(legend.position="bottom")
+#theme(legend.position=c(0.83,0.15), 
+#    legend.background = element_rect(fill="#FFFFFFAA"))
+# # Add custom legend-like annotation
+# for(i in 1:length(regions)){
+#   pub.overall = pub.overall + 
+#     grid::textGrob(regions[i], x=1, y=0.5, 
+#                    gp = gpar(color=regionkey$region_color[regionkey$region==regions[i]]))
+#     #annotate("text", x = Inf, y = Inf, label = regions[i], vjust=1, hjust=0,
+#      #        color=regionkey$region_color[regionkey$region==regions[i]])
+# }
+
+
+# Individual Regions
+regionals = lapply(regions, function(myregion){
+  ggplot(mydata$plotdata %>% filter(region==myregion)) +
+    aes(x = PC1, y = PC2, color = location) +
+    geom_point(size = 2, alpha = 0.8) +
+    labs(x = "PC1", y="PC2",
+         title=myregion, color="Location") +
+    scale_color_manual(values=colors.location ) +
+    theme(legend.position = "bottom")
+})
+pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
+
+# Combine all together
+pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5))
+ggsave(pubplot, file="2_Diversity/2b_beta_diversity.supplemental.jgw.png", width=12, height=7)
+
+
+
+
+##############
+# Supplemental - tSNE -> Didn't give any great insight, so didn't use
+##############
+
+metric = 'Weighted Unifrac'
+mydist = betas[[metric]]
+
+tsne = Rtsne(mydist, is_distance=TRUE, dims=2, perplexity=30, max_iter=2000, verbose=TRUE)
+plotdata=data.frame(t1=tsne$Y[,1], t2=tsne$Y[,2], 
+                    sample=rownames(as.matrix(mydist)))
+plotdata$location = metadata[plotdata$sample, "location"]
+plotdata = left_join(plotdata, lockey, by="location") 
+
+tplot=ggplot(plotdata) +
+  aes(x = t1, y = t2, color = region) +
+  geom_point(size = 2, alpha = 0.8) +
+  labs(x = "tSNE-1", y="tSNE-2",
+       title=metric, color="Region") +
+  scale_color_manual(values=colors.region ) +
+  theme(legend.position="bottom")
+
+# Individual Regions
+t.regionals = lapply(regions, function(myregion){
+  ggplot(plotdata %>% filter(region==myregion)) +
+    aes(x = t1, y = t2, color = location) +
+    geom_point(size = 2, alpha = 0.8) +
+    labs(x = "PC1", y="PC2",
+         title=myregion, color="Location") +
+    scale_color_manual(values=colors.location ) +
+    theme(legend.position = "bottom")
+})
+t.regions = ggarrange(plotlist = t.regionals, nrow=2, ncol=2)
