@@ -2,145 +2,197 @@
 
 # Look for associations between beta diversity and environmental parameters
 
+# TODO - Make PC plots and color by the indicated variables to see if can see things visually
+#    - Current setup doesn't work well. Need to separate PC plots to get separate color scales
+
 library(dplyr)
 library(ggplot2)
 library(gridExtra)
 library(vegan) # for mantel test
-library(qiime2R)
-library(ggpubr)
+library(rbiom)
+library(phyloseq)
 
-# TODO: Jason not sure that using the right dataset. Use a less filtered one?
+# Variables to ignore from sampled ata
+to_ignore = c("location", "pedigree", "rep_number", "plot_number", "Corrected_pedigree",
+              "Sub", "Grower", "Day.before.extract", "Date.Received","Date.Reported")
+ncores=7 # Parallel cores to use
+plot_p_threshold=0.05 # Cutoff for whether a mantel test is significant enough to plot
 
-# Function to read QZA files and convert to a data frame
-read_qza_to_df <- function(path) {
-  as.data.frame(as.matrix(read_qza(path)$data))
-}
+# Load data - Less filtered set
+asvs = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds")
 
-# Note: The dataset for below ahd the following filters applied
-# - Mitochondria & chloroplasts filtered out
-# - Taxa in blank samples removed
-# - Only the "yellow stripe" genotypes included
-# - Only genotypes with at least 2 reps per location included
-# - Location NCH1 removed
-# - Samples grouped by location
-# - Total table rarefiedl to 18000 reads per location
+###############
+# Preprocessing & distance calculations
+###############
 
+# Merge by location
+better_mean = function(x){mean(x, na.rm=TRUE)}
+asv_locs = merge_samples(asvs, group="location", fun=better_mean)
+asv_locs.rarefy = rarefy_even_depth(asv_locs, rngseed=1, replace=FALSE)
 
-# Reading environmental factor distance matrices
-Relative_Humidity_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Relative.Humidity...._distance_matrix.qza")
-Potassium_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Potassium.ppm.K_distance_matrix.qza")
-Solar_radiation_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Solar.Radiation..W.m2._distance_matrix.qza")
-Temperature_distance <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/Temperature..C._distance_matrix.qza")
+# Calculate various Beta diversity distances
+counts = t(otu_table(asv_locs.rarefy))  # Apparentlt flipped rows/cols
+mytree = phy_tree(asv_locs.rarefy)
+betas = list()  #List to hold results
+betas[['Weighted Unifrac']] = rbiom::beta.div(counts, method="unifrac", weighted=TRUE, tree=mytree)
+betas[['Unweighted Unifrac']] = rbiom::beta.div(counts, method="unifrac", weighted=FALSE, tree=mytree)
+betas[['Bray-Curtis']] = rbiom::beta.div(counts, method="bray-curtis")
 
-# Reading UniFrac distance matrices
-location_weighted_unifrac <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/weighted_unifrac_distance_matrix.qza")
-location_unweighted_unifrac <- read_qza_to_df("0_data_files/distance_matrices_for_beta_associations/unweighted_unifrac_distance_matrix.qza")
+# Calculate environmental distances
+targets = names(sample_data(asv_locs.rarefy)) %>%
+  setdiff(to_ignore)
+env_dists = lapply(targets, function(mytarget){
+  # Subset environmental data
+  subdata = sample_data(asv_locs.rarefy)[,mytarget]
+  if(all(is.na(subdata[,mytarget]))){ # Check if any data left
+    return(NULL)
+  }
+  subdata = subset(subdata, !is.na(subdata[,1]))
 
+  #Get distances
+  dist(subdata)
+})
+names(env_dists) = targets
+env_dists = env_dists[!sapply(env_dists, is.null)] # Remove any null results
 
-# Function to intersect and align distance matrices based on common location names
-align_distance_matrices <- function(unifrac_distance, env_distance) {
-  intersect_names <- intersect(rownames(unifrac_distance), rownames(env_distance))
-  aligned_distance <- env_distance[intersect_names, intersect_names]
-  return(aligned_distance)
-}
-
-# Aligning environmental factor distance matrices with UniFrac distance matrices
-Relative_Humidity_distance_aligned <- align_distance_matrices(location_weighted_unifrac, Relative_Humidity_distance)
-Potassium_distance_aligned <- align_distance_matrices(location_weighted_unifrac, Potassium_distance)
-Temperature_distance_aligned <- align_distance_matrices(location_weighted_unifrac, Temperature_distance)
-Solar_radiation_distance_aligned <- align_distance_matrices(location_weighted_unifrac, Solar_radiation_distance)
-
-
-
-# Function to extract distance vectors from distance matrices
-calc_distance_vector <- function(DM) {
-  lower_tri <- DM[lower.tri(DM)]
-  return(lower_tri)
-}
-
-# Function to perform linear modeling and summarize results
-perform_lm <- function(dependent_vector, independent_vector) {
-  lm_model <- lm(dependent_vector ~ independent_vector)
-  return(summary(lm_model))
-}
-
-# Function to create a ggplot with regression line and annotations
-create_plot <- function(x, y, x_label, y_label, p_value, r_squared) {
-  ggplot(data = data.frame(x = x, y = y), aes(x = x, y = y)) +
-    geom_point(size = 3, color = "black") +
-    geom_smooth(method = "lm", color = "blue", se = FALSE) +
-    xlab(x_label) + ylab(y_label) +
-    theme_minimal() +
-    annotate("text", x = Inf, y = Inf, label = sprintf("p-value: %.3f\nR²: %.3f", p_value, r_squared), hjust = 1.1, vjust = 1.1, size = 5)
-}
-
-# Function to perform Mantel test and extract results
-perform_mantel <- function(dm1, dm2) {
-  mantel_test <- mantel(dm1, dm2, method = "pearson", permutations = 999)
-  return(list(p_value = mantel_test$signif, r_squared = mantel_test$statistic))
-}
-
-# Extract distance vectors
-Relative_Humidity_distance_vector <- calc_distance_vector(Relative_Humidity_distance_aligned)
-Potassium_distance_vector <- calc_distance_vector(Potassium_distance_aligned)
-Solar_radiation_distance_vector <- calc_distance_vector(Solar_radiation_distance_aligned)
-Temperature_distance_vector <- calc_distance_vector(Temperature_distance_aligned)
-
-weighted_unifrac_distance_vector <- calc_distance_vector(location_weighted_unifrac)
-unweighted_unifrac_distance_vector <- calc_distance_vector(location_unweighted_unifrac)
-
-# Combine distance vectors into a dataframe
-G2F_distance_data <- data.frame(
-  Temperature_distance_vector,
-  Solar_radiation_distance_vector,
-  Relative_Humidity_distance_vector,
-  Potassium_distance_vector,
-  weighted_unifrac_distance_vector,
-  unweighted_unifrac_distance_vector
-)
-
-# Linear modeling
-lm_results <- list(
-  weighted_RH = perform_lm(weighted_unifrac_distance_vector, Relative_Humidity_distance_vector),
-  weighted_K = perform_lm(weighted_unifrac_distance_vector, Potassium_distance_vector)
-  # Add more as needed
-)
-
+##################
 # Mantel tests
-mantel_results <- list(
-  weighted_K = perform_mantel(Potassium_distance_aligned,location_weighted_unifrac),
-  weighted_T = perform_mantel(Temperature_distance_aligned,location_unweighted_unifrac)
+#################
+
+mantels=list()
+for(metric in names(betas)){
+  for(target in names(env_dists)){
+    key = paste(metric, target, sep="|")
+    dm1 = betas[[metric]] %>% as.matrix()
+    dm2 = env_dists[[target]]  %>% as.matrix()
+    # Standardize matrices
+    locs = intersect(rownames(dm1), rownames(dm2))
+    dm1 = dm1[locs, locs]
+    dm2 = dm2[locs, locs]
+    # Run mantel and save results
+    mymantel = vegan::mantel(dm1, dm2, method = "pearson", permutations = 999, parallel=ncores)
+    result = data.frame(beta=metric, env=target, size=length(locs), statistic=mymantel$statistic, p=mymantel$signif)
+    mantels[[key]] = result
+  }
+}
+mantels = bind_rows(mantels)
+
+# Sort & write out
+mantels = mantels %>% arrange(p)
+write.csv(mantels, file="5_Associations/5b_mantel_tests.jgw.csv", row.names=FALSE)
+
+################
+# Plot significant results
+################
+
+# Subset to significant associations
+significant = subset(mantels, mantels$p <= plot_p_threshold) %>%
+  mutate(key = paste(beta, env, sep="|"),
+         label = paste("r=", round(statistic, digits=3), "; p=",p, sep=""))
+
+# Make individual plots
+plots=list()
+for(i in 1:nrow(significant)){
+  metric=significant$beta[i]
+  target=significant$env[i]
+  # Recycling some code from above to standardize matrices
+  dm1 = betas[[metric]] %>% as.matrix()
+  dm2 = env_dists[[target]]  %>% as.matrix()
+  locs = intersect(rownames(dm1), rownames(dm2))
+  dm1 = dm1[locs, locs]
+  dm2 = dm2[locs, locs]
+  # Extract results
+  results = data.frame(x=dm2[lower.tri(dm2)], y=dm1[lower.tri(dm1)])
+  plots[[i]] = ggplot(results) +
+    aes(x=x, y=y) +
+    geom_point() + 
+    geom_smooth(method="lm") +
+    labs(x=target, y=metric, subtitle=significant$label[i])
+}
+
+# Combine and write out
+allplots = grid.arrange(grobs=plots, ncol=3)
+ggsave(allplots, file="5_Associations/5b_mantel_tests.jgw.png", width=8, height=8)
+
+
+# Second try - Make longer data frame to use a single ggplot
+plots=list()
+get_plotdata = function(dm, locs, valname="unknown"){
+  dm = dm[locs, locs] %>%
+    as.data.frame() %>%
+    rownames_to_column("loc1") %>%
+    pivot_longer(cols=-loc1, values_to=valname) %>%
+    rename(loc2=name) %>%
+    filter(loc1 != loc2) # Remove self-plot
+}
+for(i in 1:nrow(significant)){
+  metric=significant$beta[i]
+  target=significant$env[i]
+  # Recycling some code from above to standardize matrices
+  dm.beta = betas[[metric]] %>% as.matrix()
+  dm.env = env_dists[[target]]  %>% as.matrix()
+  locs = intersect(rownames(dm.beta), rownames(dm.env))
+  # Extract results
+  beta.plotdata = get_plotdata(dm.beta, locs, "betadist") %>%
+    mutate(beta=metric)
+  env.plotdata = get_plotdata(dm.env, locs, "envdist") %>%
+    mutate(env=target)
+  plotdata = left_join(beta.plotdata, env.plotdata, by=c("loc1", "loc2"))
+  plots[[i]] = plotdata
+}
+plotdata = bind_rows(plots)
+
+# Plot with grid arrange
+plot2 = ggplot(plotdata) + 
+  aes(x=envdist, y=betadist, color=env) +
+  geom_point() + 
+  geom_smooth(method="lm", color="black") +
+  facet_grid(beta ~ env, scales="free", switch="x") +
+  theme(legend.position="none") +
+  geom_text(mapping=aes(label=label), x=-Inf, y=Inf, data=significant,
+            color="black", vjust=2, hjust=-0.1)
+
+ggsave(plot2, file="5_Associations/5b_mantel_tests.jgw_alt.png", width=10, height=8)
+
+###############
+# Principal Components
+###############
+
+# Set up again for plotting
+combinedata=list()
+for(i in 1:nrow(significant)){
+  metric=significant$beta[i]
+  target=significant$env[i]
   
-  # Add more as needed
-)
-
-# Plots
-plots_list <- list(
-  K_weighted = create_plot(
-    G2F_distance_data$Potassium_distance_vector,
-    G2F_distance_data$weighted_unifrac_distance_vector,
-    "Distance in Relative Humidity",
-    "Weighted UniFrac Distance",
-    mantel_results$weighted_K$p_value,
-    mantel_results$weighted_K$r_squared
-  ),
-  T_weighted = create_plot(
-    G2F_distance_data$Temperature_distance_vector,
-    G2F_distance_data$weighted_unifrac_distance_vector,
-    "Distance in Relative Humidity",
-    "Weighted UniFrac Distance",
-    mantel_results$weighted_T$p_value,
-    mantel_results$weighted_T$r_squared
-  )
-  # Add more plots as needed
-)
-
-#plots_list
+  # Get PCs
+  pcs = cmdscale(betas[[metric]], k=2) %>%
+    as.data.frame()
+  names(pcs) = c("PC1", "PC2")
+  
+  # Get environmental data
+  env = sample_data(asv_locs.rarefy)[,target] %>%
+    data.frame() %>%
+    rownames_to_column("location") %>%
+    pivot_longer(cols=-location, names_to="env_metric")
+  # Combine with environmental data
+  combined = pcs %>%
+    mutate(beta_metric=metric) %>%
+    rownames_to_column("location") %>%
+    left_join(env, by="location")
+  combinedata[[i]] = combined
+}
+plotdata = bind_rows(combinedata)
 
 
 
-# Arrange and save the plots
-G2F_environment_weighted_plot <- ggarrange(plotlist = plots_list, nrow = 1, ncol = 2)
-ggsave("5_Associations/5b_G2F_environment_weighted_plot.png", G2F_environment_weighted_plot, width = 20, height = 10, device = "png")
+# Plot PCs with grid arrange
+pca_plot = ggplot(plotdata) + 
+  aes(x=PC1, y=PC2, color=value) +
+  geom_point() + 
+  facet_grid(beta_metric ~ env_metric, scales="free", switch="x") # +
+  #theme(legend.position="none") +
+  #geom_text(mapping=aes(label=label), x=-Inf, y=Inf, data=significant,
+  #          color="black", vjust=2, hjust=-0.1)
 
-#G2F_environment_weighted_plot
+ggsave(pca_plot, file="5_Associations/5b_mantel_tests.jgw_alt_pca.png", width=10, height=8)
+

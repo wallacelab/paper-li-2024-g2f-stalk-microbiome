@@ -3,19 +3,14 @@
 # Calculate GxE for alpha diversity metrics
 library(phyloseq)
 library(tidyverse)
-library(gridExtra)
+library(ggpubr)
 library(lmerTest) # TODO - This ever used? I don't think so
 library(EnvStats)
 library(gvlma)
 
-# TODO: Is it better to merge prior alpha diversity, or calculate it fresh? Does it matter?
-# TODO: Observed and Simpson are not normal. Make sure code accounts for that.
-#       TODO: Code just removes outliers. Jason thinks may need to be transformed instead
-# TODO: Need to do GVLMA assumption checks for each model. Do with lapply?
-
 # Parameters
 infile="3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds" # Input (filted) data file for GxE analysis
-alphafile="2_Diversity/2a_alpha_diversity.csv"
+alphafile="2_Diversity/2a_alpha_diversity.jgw.csv"
 alpha_id_cols=c("sampleID", "location", "rep_number", "plot_number", "Corrected_pedigree")  # Columns in above file that are just for IDs
 
 #############
@@ -46,14 +41,14 @@ alpha_names = setdiff(names(alphadiv), alpha_id_cols)
 plot1 = ggplot(data = joindata, aes(x=Shannon)) + geom_histogram()
 plot2 = ggplot(data = joindata, aes(x=Observed)) + geom_histogram()
 plot3 = ggplot(data = joindata, aes(x=Simpson)) + geom_histogram()
-alphaplots = grid.arrange(grobs=list(plot1, plot2, plot3), nrow=1)
-ggsave(alphaplots, file="3_GxE/3b_alpha_diversity_normality_check.png", width=10, height=4)
+alphaplots = ggarrange(plotlist=list(plot1, plot2, plot3), nrow=1)
+ggsave(alphaplots, file="3_GxE/3b_alpha_diversity_normality_check.jgw.png", width=10, height=4)
 
 #########
 # Transform non-normal metrics
 #########
 
-# Reflect and log-transofrm Simpson index
+# Reflect and log-transform Simpson index
 joindata$Simpson.reflect_log = log(1-joindata$Simpson)
 alpha_names = c(alpha_names, "Simpson.reflect_log")
 
@@ -75,18 +70,19 @@ outliers = lapply(rosners, function(r){
 })
 names(outliers) = alpha_names
 
-# Remove outliers - TODO - Confirm these are removing the correct values
+# Remove outliers
 for(myalpha in alpha_names){
   joindata[outliers[[myalpha]],myalpha] = NA
 }
 
 # Visualize the alpha diversity (& check for normality)
-# TODO - Extend to allow additional alpha names
-plot1 = ggplot(data = joindata, aes(x=Shannon)) + geom_histogram(fill="darkblue")
-plot2 = ggplot(data = joindata, aes(x=Observed)) + geom_histogram(fill="darkblue")
-plot3 = ggplot(data = joindata, aes(x=Simpson)) + geom_histogram(fill="darkblue")
-alphaplots = grid.arrange(grobs=list(plot1, plot2, plot3), nrow=1)
-ggsave(alphaplots, file="3_GxE/3b_alpha_diversity_normality_check.postfilter.png", width=10, height=4)
+postplots = lapply(alpha_names, function(myalpha){
+  ggplot(joindata) + 
+    aes(x=.data[[myalpha]]) +
+    geom_histogram(fill="darkblue", bins=30)
+})
+alphaplots = ggarrange(plotlist=postplots, nrow=1)
+ggsave(alphaplots, file="3_GxE/3b_alpha_diversity_normality_check.postfilter.jgw.png", width=3*length(postplots), height=4)
 
 
 ###########
@@ -98,6 +94,7 @@ models = lapply(alpha_names, function(myalpha){
   myformula = paste(myalpha, "~", "location + Corrected_pedigree + location:Corrected_pedigree")
   lm(formula = myformula, data = joindata)
 })
+names(models) = alpha_names
 
 # Basic type I anova
 anovas = lapply(models, anova)
@@ -137,6 +134,41 @@ alpha_result = bind_rows(variance_explained) %>%
   relocate(category)
 
 ##############
+# Check Linear Regression Assumptions
+##############
+
+# Test with GVLMA; have to do some tricks to get rid of interactions that don't appear in the data
+assumptions = lapply(alpha_names, function(myalpha){
+  mymodel = models[[myalpha]]
+  alphavals = mymodel$model[[myalpha]] # Extract Y values from model
+  mymatrix = model.matrix(mymodel) # Extract model matrix
+  mymatrix.trimmed = mymatrix[,!is.na(mymodel$coefficients)] # Only take non-missing coefficents
+  trimmodel = lm(alphavals ~ mymatrix.trimmed + 0) # Fit new full-column-rank model
+  
+  # Test assumptions and format for printing out
+  gvlma(trimmodel) %>%
+    display.gvlmatests() %>% 
+    as.data.frame() %>%
+    rownames_to_column("gvlma_test") %>%
+    mutate(metric=myalpha) %>%
+    relocate(metric)
+}) %>% bind_rows() %>%
+  mutate(pass= Decision == "Assumptions acceptable.")
+
+# Plot linear regression assumptions
+testplot = ggplot(assumptions) +
+  aes(x=metric, y=gvlma_test, label=round(`p-value`, digits=4), fill=pass) +
+  geom_tile() +
+  geom_text() +
+  labs(x="Diversity Metric", y="GVLMA test", title="Test regression assumptions (p-values)") +
+  theme(axis.text.x = element_text(angle=90)) +
+  scale_fill_manual(values=c("FALSE"="lightpink", "TRUE"="dodgerblue")) 
+ggsave(testplot, file="3_GxE/3b_alpha_diversity.gvlma_tests.jgw.png", height=6, width=6)
+
+# Write out GVLMA checks
+write.csv(assumptions, file="3_GxE/3b_alpha_diversity.gvlma_tests.jgw.csv", row.names=FALSE)
+
+##############
 # Output data and plots of variance explained by each term
 ##############
 
@@ -157,6 +189,7 @@ alphaplot = ggplot(data=plotdata) +
     axis.title.y = element_text(size=15, face="bold"),
     plot.title = element_text(size=15, face="bold"),
     axis.text = element_text(size=15, face="bold"),
+    axis.text.x = element_text(size=10, angle=90, vjust=0.5, hjust=1),
     strip.text.x = element_text(size=15,face="bold"),
     legend.title = element_blank(),
     axis.title.x = element_blank(),
@@ -164,8 +197,8 @@ alphaplot = ggplot(data=plotdata) +
   )
 
 #output the graph
-ggsave(alphaplot, file="3_GxE/3b_alpha_diversity.variance_explained.png", height=5, width=6, device="png")
+ggsave(alphaplot, file="3_GxE/3b_alpha_diversity.variance_explained.jgw.png", height=6, width=6, device="png")
 
 # Write data
-write.csv(alpha_result, file="3_GxE/3b_alpha_diversity.variance_explained.csv", row.names=FALSE)
+write.csv(alpha_result, file="3_GxE/3b_alpha_diversity.variance_explained.jgw.csv", row.names=FALSE)
 

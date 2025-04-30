@@ -5,29 +5,62 @@
 library(ggplot2)
 library(phyloseq)
 library(qiime2R)
-library(tidyverse)
+library(rbiom)
+library(tidyverse) 
 library(vegan)
 
 # Global variables
 nperms = 999 # number of permutations for distance-based redundancy analysis
 set.seed(1) # Hoping this works for anova.cca() permutations; documentation unclear, but tests indicate should work
+sig_threshold=0.05 # Threshold for calling a model term significant
 
 # Load necessary data
-weighted_unifrac = read_qza("0_data_files/weighted_unifrac_distance_matrix.qza")
-unweighted_unifrac = read_qza("0_data_files/unweighted_unifrac_distance_matrix.qza")
-metadata = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds") %>% 
+asvs = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds")
+metadata = asvs %>% 
   sample_data() %>%
   data.frame() %>%
   rownames_to_column("SampleID")
+
+# Calculate distance matrices from scratch
+## Extract needed data
+asv_matrix = asvs %>% otu_table() %>% as.matrix()
+mytree = asvs %>% phy_tree
+## Run distance calculations
+distances=list()
+distances[["bray"]] = rbiom::beta.div(asv_matrix, method="bray-curtis") %>% as.matrix()
+distances[["jaccard"]] = rbiom::beta.div(asv_matrix, method="jaccard") %>% as.matrix()
+distances[["weighted"]] = rbiom::beta.div(asv_matrix, method="unifrac", tree=mytree, weighted=TRUE) %>% as.matrix()
+distances[["unweighted"]] = rbiom::beta.div(asv_matrix, method="unifrac", tree=mytree, weighted=FALSE) %>% as.matrix()
+
+# # Quick confirmation to make sure these match QIIME 
+# # Close but not quite. given that there's 1 different taxon in each, I suspect it was just slightly different filtering
+# # They're both >99% correlated, which I consider close enough.
+# weighted_unifrac = read_qza("0_data_files/weighted_unifrac_distance_matrix.qza")
+# unweighted_unifrac = read_qza("0_data_files/unweighted_unifrac_distance_matrix.qza")
+# ## Weighted
+# weight_qiime = weighted_unifrac$data %>% as.matrix()
+# weight_rbiom = distances[["weighted"]]
+# common_taxa_w = intersect(rownames(weight_qiime), rownames(weight_rbiom))
+# weight_rbiom = weight_rbiom[common_taxa_w,common_taxa_w]
+# weight_qiime = weight_qiime[common_taxa_w,common_taxa_w]
+# plot(as.numeric(weight_qiime), as.numeric(weight_rbiom))
+# cor(as.numeric(weight_qiime), as.numeric(weight_rbiom)) # 0.993
+# ## Unweighted
+# unweight_qiime = unweighted_unifrac$data %>% as.matrix()
+# unweight_rbiom = distances[["unweighted"]]
+# common_taxa_u = intersect(rownames(unweight_qiime), rownames(unweight_rbiom))
+# unweight_rbiom = unweight_rbiom[common_taxa_w,common_taxa_w]
+# unweight_qiime = unweight_qiime[common_taxa_w,common_taxa_w]
+# plot(as.numeric(unweight_qiime), as.numeric(unweight_rbiom))
+# cor(as.numeric(unweight_qiime), as.numeric(unweight_rbiom)) # 0.9997
+
 
 ########################################################################
 
 
 # Function to calculate beta heritability from distance matrices and metadata
-beta_heritability_cal <- function(input_qza, input_metadata) {
-  # Extract distance matrix
-  distance_matrix <- input_qza$data %>% as.matrix()
-  
+beta_heritability_cal <- function(distance_matrix, input_metadata) {
+
   # Subset to just the common taxa
   taxa = intersect(rownames(distance_matrix), input_metadata$SampleID)
   
@@ -69,7 +102,7 @@ construct_contribution_table <- function(heritability_df, type) {
                                 factor == "Residual" ~ "Residual",
                                 TRUE ~ "UNKNOWN") ) %>%
     relocate(test_var, Type) %>%
-    select(-factor) %>%
+    dplyr::select(-factor) %>%
     filter(test_var != "Residual")
   
   return(contribution_df)
@@ -78,29 +111,32 @@ construct_contribution_table <- function(heritability_df, type) {
 #############################################################################
 
 # Analyze weighted and unweighted UniFrac data
-weighted_unifrac_heritability_df <- beta_heritability_cal(weighted_unifrac, metadata)
-unweighted_unifrac_heritability_df <- beta_heritability_cal(unweighted_unifrac, metadata)
+herits = lapply(distances, beta_heritability_cal, input_metadata=metadata)
 
 # Construct contribution tables
-weighted_unifrac_contribution_table <- construct_contribution_table(weighted_unifrac_heritability_df, "Weighted")
-unweighted_unifrac_contribution_table <- construct_contribution_table(unweighted_unifrac_heritability_df, "Unweighted")
-
-# Combine weighted and unweighted UniFrac contribution tables
-unifrac_contribution_table <- dplyr::bind_rows(weighted_unifrac_contribution_table, unweighted_unifrac_contribution_table)
-
-# Prepare for combined alpha and beta diversity analysis
-unifrac_contribution_table$category <- "Beta Diversity"
+tables = lapply(names(herits), function(metric){
+  construct_contribution_table(herits[[metric]], type=metric)
+}) %>%
+  bind_rows() %>%
+  mutate(category="Beta Diversity") %>%
+  relocate(category)
 
 # Plot the contributions of G, E, and GXE on alpha and beta diversity
-betaplot = ggplot(data = unifrac_contribution_table, aes(x = Type, y = heritability, fill = test_var)) +
+plotdata = tables %>%
+  mutate(alpha=ifelse(`Pr(>F)` < sig_threshold, yes=1, no=0.75))
+notsig = subset(plotdata, `Pr(>F)` >= sig_threshold)
+betaplot = ggplot(plotdata) +
+  aes(x = Type, y = heritability, fill = test_var, alpha=alpha) +
   geom_bar(position = "stack", stat = "identity") +
   ylab("Variance Explained") +
   ggtitle("GxE for Beta Diversity") + 
   theme_minimal() +
-  theme(legend.position = "bottom", axis.title.x = element_blank(), legend.title = element_blank())
+  theme(legend.position = "bottom", axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_alpha(guide='none') +
+  geom_text(data=notsig, label="n.s.", alpha=1, position=position_stack(vjust=0.5))
 
 # Save the plot
-ggsave(betaplot, file="3_GxE/3c_beta_diversity_GxE.png", height = 3, width = 3, device = "png")
+ggsave(betaplot, file="3_GxE/3c_beta_diversity_GxE.jgw.png", height = 3, width = 3, device = "png")
 
 # Save the output data 
-write.csv(unifrac_contribution_table, file="3_GxE/3c_beta_diversity_GxE.csv", row.names=FALSE)
+write.csv(tables, file="3_GxE/3c_beta_diversity_GxE.jgw.csv", row.names=FALSE)
