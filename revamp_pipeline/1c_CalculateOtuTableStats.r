@@ -10,6 +10,7 @@ library(tidyverse)
 
 initial=readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds")
 rarefied=readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds")
+yellow_stripe=readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.yellow_stripe.phyloseq.rds")
 
 stats=function(mydata, label="UNKNOWN"){
   cat(label,"has:\n")
@@ -27,5 +28,6 @@ stats=function(mydata, label="UNKNOWN"){
 
 stats(initial, "Initial")
 stats(rarefied, "Rarefied")
+stats(yellow_stripe, "Yellow Stripe")
 
 
