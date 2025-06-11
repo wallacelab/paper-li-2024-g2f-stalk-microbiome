@@ -53,7 +53,7 @@ ncolors = sum(plotdata$pass_filters)
 plotdata$location_color=NA
 plotdata$location_color[!plotdata$pass_filters]="black" # Black for ones sampled but filtered out
 plotdata$location_color[!plotdata$sampled]="gray50" # Gray for unsampled locations
-plotdata$location_color[plotdata$pass_filters]= pals::kelly()[1:ncolors + 2]  # +2 offset to avoid light gray & make higher contrast among sites in same region
+plotdata$location_color[plotdata$pass_filters]= pals::kelly()[1:ncolors +1]  # +1 offset to avoid light gray & make higher contrast among sites in same region
 ## Make a variable for use later
 lockey = plotdata$location_color
 names(lockey) = plotdata$location
@@ -68,6 +68,24 @@ plotdata$region_color = regionkey[plotdata$region]
 
 # write out location key for future use
 write.csv(plotdata, file="1_parsed_files/1b_location_key.csv", row.names=FALSE)
+
+#########
+# Color test of within-region differentiation of colors 
+#########
+
+subcolor = subset(plotdata, plotdata$pass_filters)
+colorkey = subcolor$location_color
+names(colorkey)=subcolor$location
+colortest = ggplot(subcolor) +
+  aes(x=location, y=pass_filters, fill=location) +
+  geom_col() +
+  scale_fill_manual(values=colorkey) +
+  facet_wrap(~region, scale="free_x") +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        legend.position="none")
+ggsave(colortest, file="1_parsed_files/1b_location_colortest.png")
+
+
 
 ###########
 # Plot locations
