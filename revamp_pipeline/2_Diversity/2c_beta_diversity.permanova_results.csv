@@ -1,0 +1,7 @@
+"","metric","factor","p","R2","n_groups"
+"1","Bray-Curtis","location",1e-04,0.0297235973424581,15
+"2","Bray-Curtis","Corrected_pedigree",0.7741,0.0427467678007372,19
+"3","Unweighted_Unifrac","location",1e-04,0.124291679718355,15
+"4","Unweighted_Unifrac","Corrected_pedigree",0.001,0.0498690338716234,19
+"5","Weighted_Unifrac","location",1e-04,0.226294327349393,15
+"6","Weighted_Unifrac","Corrected_pedigree",0.0033,0.0569598913539329,19
