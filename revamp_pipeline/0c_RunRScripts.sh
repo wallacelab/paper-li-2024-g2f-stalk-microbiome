@@ -2,6 +2,14 @@
 
 # This is just a wrapper script to run all the R scripts without having to do them manually.
 
+# Make needed directories
+if [[ ! -e 1_parsed_files ]] ; then mkdir 1_parsed_files; fi
+if [[ ! -e 2_Diversity ]] ; then mkdir 2_Diversity; fi
+if [[ ! -e 3_GxE ]] ; then mkdir 3_GxE; fi
+if [[ ! -e 4_CoreMicrobiome ]] ; then mkdir 4_CoreMicrobiome; fi
+if [[ ! -e 5_Associations ]] ; then mkdir 5_Associations; fi
+if [[ ! -e 5_Associations/5d_pathways ]] ; then mkdir 5_Associations/5d_pathways; fi
+
 
 # Basic data unification and cleaning
 Rscript 1a_UnifyData.r
@@ -16,8 +24,8 @@ Rscript 3a_FilterSamplesForGxE.r
 Rscript 3b_CalcGxE_AlphaDiversity.r
 Rscript 3c_CalcGxE_BetaDiversity.r
 Rscript 3d_CalcGxe_Pathways.r
-Rscript 3e1_CompareGxE_Taxonomy.r
 Rscript 3e_CaclGxE_Taxonomy.r
+Rscript 3e1_CompareGxE_Taxonomy.r
 Rscript 3f_PlotGxE.r
 
 # Core microbiome
