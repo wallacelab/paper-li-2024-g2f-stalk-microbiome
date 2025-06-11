@@ -1,7 +1,0 @@
-"test_var","Type","Df","SumOfSqs","F","Pr(>F)","heritability","category"
-"Environment","Weighted",10,4.6545255686941,10.610127805804,0.001,0.22953229447721,"Beta Diversity"
-"Maize Genotype","Weighted",19,1.05942513648792,1.27104775239118,0.008,0.052244268253774,"Beta Diversity"
-"GXE","Weighted",93,4.7816319535346,1.17202909086391,0.003,0.235800391993179,"Beta Diversity"
-"Environment","Unweighted",10,11.8148879814769,4.80033838997373,0.001,0.121782400310435,"Beta Diversity"
-"Maize Genotype","Unweighted",19,5.34556213710506,1.14309421268298,0.004,0.0550995819076618,"Beta Diversity"
-"GXE","Unweighted",93,24.9698017454191,1.090873496424,0.001,0.257377166554627,"Beta Diversity"
