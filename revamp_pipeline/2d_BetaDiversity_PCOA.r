@@ -5,6 +5,8 @@ library(ggpubr)
 
 # Beta Diversity Analysis Using Weighted and Unweighted UniFrac Distances
 
+background_color="gray96"
+
 #####
 # Load PC data
 #####
@@ -106,17 +108,9 @@ pub.overall = ggplot(mydata$plotdata) +
   labs(x = mydata$axis_labels[1], y=mydata$axis_labels[2],
        title=metric, color="Region") +
   scale_color_manual(values=colors.region ) +
-  theme(legend.position="bottom")
-  #theme(legend.position=c(0.83,0.15), 
-   #    legend.background = element_rect(fill="#FFFFFFAA"))
-# # Add custom legend-like annotation
-# for(i in 1:length(regions)){
-#   pub.overall = pub.overall + 
-#     grid::textGrob(regions[i], x=1, y=0.5, 
-#                    gp = gpar(color=regionkey$region_color[regionkey$region==regions[i]]))
-#     #annotate("text", x = Inf, y = Inf, label = regions[i], vjust=1, hjust=0,
-#      #        color=regionkey$region_color[regionkey$region==regions[i]])
-# }
+  theme(legend.position="bottom", 
+        panel.background = element_rect(fill=background_color))
+
   
 
 # Individual Regions
@@ -127,7 +121,8 @@ regionals = lapply(regions, function(myregion){
     labs(x = "PC1", y="PC2",
          title=myregion, color="Location") +
     scale_color_manual(values=colors.location ) +
-    theme(legend.position = "bottom")
+    theme(legend.position = "bottom",
+          panel.background = element_rect(fill=background_color))
 })
 pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
 
@@ -153,17 +148,8 @@ pub.overall = ggplot(mydata$plotdata) +
   labs(x = mydata$axis_labels[1], y=mydata$axis_labels[2],
        title=metric, color="Region") +
   scale_color_manual(values=colors.region ) +
-  theme(legend.position="bottom")
-#theme(legend.position=c(0.83,0.15), 
-#    legend.background = element_rect(fill="#FFFFFFAA"))
-# # Add custom legend-like annotation
-# for(i in 1:length(regions)){
-#   pub.overall = pub.overall + 
-#     grid::textGrob(regions[i], x=1, y=0.5, 
-#                    gp = gpar(color=regionkey$region_color[regionkey$region==regions[i]]))
-#     #annotate("text", x = Inf, y = Inf, label = regions[i], vjust=1, hjust=0,
-#      #        color=regionkey$region_color[regionkey$region==regions[i]])
-# }
+  theme(legend.position="bottom",
+        panel.background = element_rect(fill=background_color))
 
 
 # Individual Regions
@@ -174,13 +160,14 @@ regionals = lapply(regions, function(myregion){
     labs(x = "PC1", y="PC2",
          title=myregion, color="Location") +
     scale_color_manual(values=colors.location ) +
-    theme(legend.position = "bottom")
+    theme(legend.position = "bottom", 
+          panel.background = element_rect(fill=background_color))
 })
 pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
 
 # Combine all together
 pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5))
-ggsave(pubplot, file="2_Diversity/2b_beta_diversity.supplemental.png", width=12, height=7)
+ggsave(pubplot, file="2_Diversity/2d_beta_diversity.supplemental.png", width=12, height=7)
 
 
 
