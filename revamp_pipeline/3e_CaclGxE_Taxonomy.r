@@ -71,7 +71,7 @@ anova_calculation_taxa <- function(input_data, input_metadata){
   core_taxa_table = otu_table(input_data) %>%
     t() %>%
     as.data.frame()
-  pseudo_core_taxa_table <- core_taxa_table + 1  # Add pseudocount of 1
+  pseudo_core_taxa_table <- core_taxa_table # Called "pseudo" b/c originally added a pseudocount for some reason
   pseudo_core_taxa_table$SampleID <- rownames(pseudo_core_taxa_table)
   
   # Join with metadata

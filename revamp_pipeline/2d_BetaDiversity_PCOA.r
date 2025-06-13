@@ -122,7 +122,8 @@ regionals = lapply(regions, function(myregion){
     theme(legend.position = "bottom",
           panel.background = element_rect(fill=background_color))
 })
-pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
+pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2, 
+                        labels=c("B","C","D","E"))
 
 # Alternative individual regions where done with facets
 # Individual Regions
@@ -138,7 +139,8 @@ pub.regions.wrap = ggplot(mydata$plotdata) +
 
 
 # Combine all together - Note: I like this one better
-pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5))
+pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5),
+                    labels=c("A", ""))
 ggsave(pubplot, file="2_Diversity/2d_beta_diversity.weighted.publication.png", width=12, height=7)
 
 # And alternate version with facet_wrap
@@ -175,10 +177,12 @@ regionals = lapply(regions, function(myregion){
     theme(legend.position = "bottom", 
           panel.background = element_rect(fill=background_color))
 })
-pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
+pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2,
+                        labels=c("B","C","D","E"))
 
 # Combine all together
-pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5))
+pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5),
+                    labels=c("A",""))
 ggsave(pubplot, file="2_Diversity/2d_beta_diversity.unweighted.supplemental.png", width=12, height=7)
 
 
@@ -214,7 +218,7 @@ geno.unweight = plot_by_geno(plotdata, "Unweighted Unifrac", min_count=min_geno_
 
 # Arrange and write out
 genoplots = ggarrange(geno.weight, geno.unweight, nrow=1, 
-                      common.legend=TRUE, legend="right")
+                      common.legend=TRUE, legend="right", labels="AUTO")
 ggsave(genoplots, file="2_Diversity/2d_beta_diversity.genotypes.supplemental.png", width=8, height=4)
 
 

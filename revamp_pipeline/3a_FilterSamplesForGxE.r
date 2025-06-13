@@ -18,7 +18,7 @@ min_locs_present = 3 # How many different locations a genotype need to be in to 
 ps.rarefied = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phyloseq.rds")
 
 ##############
-# Filter for samples with min reps per location and min locationss
+# Filter for samples with min reps per location and min locations
 ##############
 
 # Extract and format metadata for manipulation

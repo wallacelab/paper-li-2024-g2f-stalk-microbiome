@@ -110,7 +110,7 @@ construct_contribution_table <- function(heritability_df, type) {
 
 #############################################################################
 
-# Analyze weighted and unweighted UniFrac data
+# Analyze beta diversity data
 herits = lapply(distances, beta_heritability_cal, input_metadata=metadata)
 
 # Construct contribution tables

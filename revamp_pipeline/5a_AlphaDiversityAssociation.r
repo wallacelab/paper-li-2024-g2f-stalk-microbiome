@@ -15,6 +15,9 @@ library(tidyverse)
 
 # Load data
 alpha_diversity = read.csv("2_Diversity/2a_alpha_diversity.jgw.csv")
+G2f_2019_soil_data <- read.csv("0_data_files/g2f_2019_soil_data.csv", sep = ",")
+G2f_2019_weather_data <- read.csv("0_data_files//G2F_2019_weather_average_and_sum.tsv", sep = "\t")
+
 
 ###########################################################
 
@@ -38,9 +41,6 @@ G2F_2019_median_alpha_diversity_by_location_data <- alpha_diversity %>%
     median_observed_features = median(Observed, na.rm = TRUE),
     median_simpson = median(Simpson, na.rm = TRUE)
   )
-
-G2f_2019_soil_data <- read.csv("0_data_files/g2f_2019_soil_data.csv", sep = ",")
-G2f_2019_weather_data <- read.csv("0_data_files//G2F_2019_weather_average_and_sum.tsv", sep = "\t")
 
 # Joining soil and weather data with median alpha diversity data
 G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data <- G2F_2019_median_alpha_diversity_by_location_data %>%
