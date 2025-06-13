@@ -62,7 +62,7 @@ regionplot = ggarrange(plotlist=plots.region, nrow=1, common.legend=TRUE, legend
 ggsave(regionplot, file="2_Diversity/2d_beta_diversity.by_region.png", width=8, height=3)
 
 
-# Plot, colored by sample location
+# Plot, colored by individual sample location (split by region)
 plots.location = lapply(names(plotdata), function(metric){
   mydata=plotdata[[metric]]
   ggplot(mydata$plotdata) +
@@ -75,7 +75,6 @@ plots.location = lapply(names(plotdata), function(metric){
 
 locationplot = ggarrange(plotlist=plots.location, nrow=1, common.legend=TRUE, legend="bottom")
 ggsave(locationplot, file="2_Diversity/2d_beta_diversity.by_location.png", width=8, height=4)
-
 
 # Still by location, but split with facets by region
 plots.split = lapply(names(plotdata), function(metric){
@@ -125,9 +124,26 @@ regionals = lapply(regions, function(myregion){
 })
 pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
 
-# Combine all together
+# Alternative individual regions where done with facets
+# Individual Regions
+pub.regions.wrap = ggplot(mydata$plotdata) +
+    aes(x = PC1, y = PC2, color = location) +
+    geom_point(size = 2, alpha = 0.8) +
+    labs(x = "PC1", y="PC2", color="Location") +
+    scale_color_manual(values=colors.location ) +
+    theme(legend.position = "bottom",
+          panel.background = element_rect(fill=background_color))+
+  facet_wrap(~region)
+
+
+
+# Combine all together - Note: I like this one better
 pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5))
 ggsave(pubplot, file="2_Diversity/2d_beta_diversity.weighted.publication.png", width=12, height=7)
+
+# And alternate version with facet_wrap
+pubplot = ggarrange(pub.overall, pub.regions.wrap, nrow=1, widths=c(1,1.5))
+ggsave(pubplot, file="2_Diversity/2d_beta_diversity.weighted.publication.alternative.png", width=12, height=7)
 
 
 
