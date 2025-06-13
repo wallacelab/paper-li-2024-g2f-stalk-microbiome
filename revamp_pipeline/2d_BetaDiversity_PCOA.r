@@ -6,6 +6,7 @@ library(ggpubr)
 # Beta Diversity Analysis Using Weighted and Unweighted UniFrac Distances
 
 background_color="gray96"
+min_geno_count=20 # Minimum times a genotype has to appear to be plotted
 
 #####
 # Load PC data
@@ -94,7 +95,7 @@ ggsave(splitplot, file="2_Diversity/2d_beta_diversity.split.png", width=8, heigh
 
 
 ##############
-# Plot - For publication
+# Plot - For publication - Weighted by location
 ##############
 
 
@@ -111,8 +112,6 @@ pub.overall = ggplot(mydata$plotdata) +
   theme(legend.position="bottom", 
         panel.background = element_rect(fill=background_color))
 
-  
-
 # Individual Regions
 regionals = lapply(regions, function(myregion){
   ggplot(mydata$plotdata %>% filter(region==myregion)) +
@@ -128,15 +127,13 @@ pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
 
 # Combine all together
 pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5))
-ggsave(pubplot, file="2_Diversity/2d_beta_diversity.publication.png", width=12, height=7)
+ggsave(pubplot, file="2_Diversity/2d_beta_diversity.weighted.publication.png", width=12, height=7)
 
 
 
 ##############
-# Supplemental - Unweighted
+# Supplemental - Unweighted by location
 ##############
-
-
 
 # Overall plot
 metric='Unweighted Unifrac'
@@ -150,7 +147,6 @@ pub.overall = ggplot(mydata$plotdata) +
   scale_color_manual(values=colors.region ) +
   theme(legend.position="bottom",
         panel.background = element_rect(fill=background_color))
-
 
 # Individual Regions
 regionals = lapply(regions, function(myregion){
@@ -167,8 +163,43 @@ pub.regions = ggarrange(plotlist = regionals, nrow=2, ncol=2)
 
 # Combine all together
 pubplot = ggarrange(pub.overall, pub.regions, nrow=1, widths=c(1,1.5))
-ggsave(pubplot, file="2_Diversity/2d_beta_diversity.supplemental.png", width=12, height=7)
+ggsave(pubplot, file="2_Diversity/2d_beta_diversity.unweighted.supplemental.png", width=12, height=7)
 
+
+
+
+##############
+# Supplemental - Weighted & Unweighted by genotype
+##############
+
+plot_by_geno = function(plotdata, metric, min_count=1){
+  # Select and filter data for genotypes present minimum count of times
+  mydata=plotdata[[metric]]
+  toplot = mydata$plotdata %>%
+    group_by(Corrected_pedigree) %>%
+    filter(n() >= min_count)
+  # Make plot
+  pub.overall = ggplot(toplot) +
+    aes(x = PC1, y = PC2, color = Corrected_pedigree) + 
+    geom_point(size = 2, alpha = 0.8) +
+    labs(x = mydata$axis_labels[1], y=mydata$axis_labels[2],
+         title=metric, color="Genotype",
+         subtitle=paste("Only showing genotypes with ≥", min_count,"samples")) +
+    theme(legend.position="bottom",
+          panel.background = element_rect(fill=background_color),
+          legend.key.height=unit(0.15, "cm"),
+          plot.subtitle = element_text(size=8))
+  return(pub.overall)
+}
+
+# Make plots
+geno.weight = plot_by_geno(plotdata, "Weighted Unifrac", min_count=min_geno_count)
+geno.unweight = plot_by_geno(plotdata, "Unweighted Unifrac", min_count=min_geno_count)
+
+# Arrange and write out
+genoplots = ggarrange(geno.weight, geno.unweight, nrow=1, 
+                      common.legend=TRUE, legend="right")
+ggsave(genoplots, file="2_Diversity/2d_beta_diversity.genotypes.supplemental.png", width=8, height=4)
 
 
 # ##############
