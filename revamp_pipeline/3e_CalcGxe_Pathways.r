@@ -13,7 +13,7 @@ library(MASS)
 pathway_file="3_GxE/3d_picrust2_predictions/pathways_out/path_abun_unstrat.tsv.gz" # Redone with exact GxE sample dataset
 max_sample_missing=70 # Pathway descriptions with 0s (=missing) in more than this many samples will be removed
 n_diagnostics=12 # Number of pathways to plot diagnostic plots for transmforations
-fdr_cutoff=0.01 # Cutoff to consider a pathway significant
+fdr_cutoff=0.05 # Cutoff to consider a pathway significant
 
 # Load metadata
 metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds") %>% 

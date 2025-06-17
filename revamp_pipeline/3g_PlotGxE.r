@@ -12,7 +12,8 @@ pathways = read.csv("3_GxE/3e_MetaCyc_pathway_GXE.csv")
 taxonomy = read.csv("3_GxE/3f_taxon_GXE.csv")
 
 # Global variables
-sig_threshold=0.05 # Significance threshold
+sig_threshold=0.05 # Significance threshold for alpha & beta diversity
+fdr_cutoff.pathways=0.01 # FDR cutoff for GxE pathways
 colorkey = c("Maize Genotype" = "#74afda", "GXE" = "#00a693", "Environment" = "#da9100")
 taxa_levels=c("Phylum", "Class","Order","Family","Genus","Species")
 
@@ -63,8 +64,11 @@ betaplot = div_barplot(beta, set="Beta")
 # Significance
 path.significant = pathways %>%
   group_by(term) %>%
-  summarize(n=n(), fraction = sum(pval < 0.01)/n(), .groups="drop") %>%
-  mutate(percent = round(fraction*100, digits=1) %>% paste("%", sep=""))
+  summarize(n=n(),
+            n_significant = sum(fdr < fdr_cutoff.pathways),
+            fraction = n_significant/n) %>%
+  mutate(percent = round(fraction*100, digits=1) %>% paste("%", sep=""),
+         n_significant = paste("n =", n_significant))
 
 # Make violin plot  
 pathplot = ggplot(pathways) +
