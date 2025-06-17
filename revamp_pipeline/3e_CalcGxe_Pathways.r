@@ -2,13 +2,6 @@
 
 # Look at GxE for inferred biochemical pathways
 
-# TODO - I bet a lot of these are not normal. How to deal with?
-#   gvlma() and Anova() keep failing due to singularities
-#   plot.lm() shows some major issues with the first several models; probably others, too
-#   May have to do mass random subset QC of models, and then do mass boxcox of them?
-#     rcompanion::tukeytransofrm or mass:boxcox - https://rcompanion.org/handbook/I_12.html
-
-
 # Load libraries
 library(data.table)
 library(tidyverse)
@@ -16,7 +9,8 @@ library(phyloseq)
 library(MASS)
 
 # Global variables
-pathway_file="0_data_files/path_abun_unstrat_descrip.tsv"
+#pathway_file="0_data_files/path_abun_unstrat_descrip.tsv" # Original analysis; DEPRECATED
+pathway_file="3_GxE/3d_picrust2_predictions/pathways_out/path_abun_unstrat.tsv.gz" # Redone with exact GxE sample dataset
 max_sample_missing=70 # Pathway descriptions with 0s (=missing) in more than this many samples will be removed
 n_diagnostics=12 # Number of pathways to plot diagnostic plots for transmforations
 
@@ -81,7 +75,7 @@ for(mypath in pathways){
   #break
 }
 
-# TODO - Output diagnostic plots of before and after transofrmation
+# Output diagnostic plots of before and after transofrmation
 set.seed(1)
 diagnostics = sample(pathways, size=n_diagnostics, replace=FALSE) %>% sort()
 diag_data = lapply(diagnostics, function(mypath){
@@ -102,9 +96,9 @@ ggsave(diplot, file="3_GxE/3e_MetaCyc_pathway_GXE.diagnostics.png",
        height = n_diagnostics*2, width = 6)
 
 
-# TODO - still ANOVA here, or with boxcox?
-#anova_results <- lapply(lm_results, anova)
-anova_results <- lapply(lm_boxcox, anova)
+# ANOVA of results
+#####anova_results <- lapply(lm_results, anova)  # Don't use raw results
+anova_results <- lapply(lm_boxcox, anova)  # Use boxcox-transformed instead
 
 # Calculate heritabilities
 herits = lapply(names(anova_results), function(mypathway){

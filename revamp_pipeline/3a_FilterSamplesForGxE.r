@@ -101,5 +101,14 @@ ggsave(allplots, file="3_GxE/3a_filter_checks.png", width=12, height=8)
 # Write out filtered data
 ############
 
+# Full Phyloseq object
 outdata = prune_samples(filtered$SampleID, ps.rarefied)
 saveRDS(outdata, file="3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds")
+
+# Just abundance table (for PICRUST2 prediction)
+asvs = otu_table(outdata) %>%
+  as.data.frame() %>%
+  rownames_to_column("asv")
+write.table(asvs, file='3_GxE/3a_asv_table.rarefied.filt_for_gxe.tsv',
+            sep='\t', quote=FALSE, row.names=FALSE, col.names=TRUE)
+
