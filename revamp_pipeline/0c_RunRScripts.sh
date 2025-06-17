@@ -25,10 +25,10 @@ Rscript 2d_BetaDiversity_PCOA.r
 Rscript 3a_FilterSamplesForGxE.r
 Rscript 3b_CalcGxE_AlphaDiversity.r
 Rscript 3c_CalcGxE_BetaDiversity.r
-Rscript 3d_CalcGxe_Pathways.r
-Rscript 3e_CaclGxE_Taxonomy.r
-Rscript 3e1_CompareGxE_Taxonomy.r
-Rscript 3f_PlotGxE.r
+bash 3d_RunPicrust2OnGxEData.sh
+Rscript 3e_CalcGxe_Pathways.r
+Rscript 3f_CaclGxE_Taxonomy.r
+Rscript 3g_PlotGxE.r
 
 # Core microbiome
 Rscript 4a_CoreMicrobiome.r
