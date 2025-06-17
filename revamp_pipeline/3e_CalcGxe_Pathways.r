@@ -13,6 +13,7 @@ library(MASS)
 pathway_file="3_GxE/3d_picrust2_predictions/pathways_out/path_abun_unstrat.tsv.gz" # Redone with exact GxE sample dataset
 max_sample_missing=70 # Pathway descriptions with 0s (=missing) in more than this many samples will be removed
 n_diagnostics=12 # Number of pathways to plot diagnostic plots for transmforations
+fdr_cutoff=0.01 # Cutoff to consider a pathway significant
 
 # Load metadata
 metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds") %>% 
@@ -124,24 +125,36 @@ herits = lapply(names(anova_results), function(mypathway){
 # Calculate fractions that are significant
 significant = herits %>%
   group_by(term) %>%
-  summarize(fraction = sum(fdr < 0.01)/n()) %>%
-  mutate(percent = round(fraction*100, digits=1) %>% paste("% sig."))
+  summarize(n=n(),
+            n_significant = sum(fdr < fdr_cutoff),
+            fraction = n_significant/n) %>%
+  mutate(percent = round(fraction*100, digits=1) %>% paste("% sig."),
+         n_significant = paste("n =", n_significant))
 
-# Make violin plot  
-heritability_plot = ggplot(herits) +
-  aes(x = term, y = herit, fill = term) +
-  geom_violin(trim = TRUE) +
-  theme_minimal() +
-  theme(
+# violin plot helper function
+make_herit_plot = function(myherits){
+  ggplot(myherits) +
+    aes(x = term, y = herit, fill = term) +
+    geom_violin(trim = TRUE) +
+    theme_minimal() +
+    theme(
       legend.position = "none",
       axis.title.x = element_blank(),
       axis.title.y = element_text(size = 14),
       axis.text = element_text(size = 12)
-  ) +
-  labs(x="", y="Heritability") + 
-  stat_summary(fun = mean, geom = "crossbar", width = 0.2, color = "black") +
+    ) +
+    labs(x="", y="Heritability") + 
+    stat_summary(fun = mean, geom = "crossbar", width = 0.2, color = "black") 
+}
+
+# Make violin plot  
+heritability_plot = make_herit_plot(herits)+
   geom_text(data=significant, mapping=aes(label=percent), y=max(herits$herit))
+heritability_plot.significant = make_herit_plot(herits %>% filter(fdr <= fdr_cutoff))+
+  geom_text(data=significant, mapping=aes(label=n_significant), y=max(herits$herit))
+ 
 
 # Save data & plots
 ggsave(heritability_plot, file="3_GxE/3e_MetaCyc_pathway_GXE.png", height = 10, width = 10, device = "png")
+ggsave(heritability_plot.significant, file="3_GxE/3e_MetaCyc_pathway_GXE.significant_only.png", height = 10, width = 10, device = "png")
 write.csv(herits, file="3_GxE/3e_MetaCyc_pathway_GXE.csv", row.names=FALSE)
