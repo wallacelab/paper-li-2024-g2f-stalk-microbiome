@@ -84,7 +84,10 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
   # Format taxonomy
   taxonomy = str_split_fixed(mycore$Taxaname, ';', n=Inf)
   colnames(taxonomy) = rank_names(asvs)
-  mycore$plot_taxon = taxonomy[,myrank]
+  mycore$plot_taxon = taxonomy[,myrank] %>%
+    sub(pattern="^ +", repl="") %>% # Remove leading spaces
+    gsub(pattern="[dkpcofgs]__", repl="")  # Remove taxon level prefixes
+    
   
   # Set which variable is on X axis
   mycore$xval = mycore[,xval] %>% unlist()
@@ -99,6 +102,12 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
     my_aes = aes(x=xval, y=plot_taxon, label=significant, fill=prevalence)
   }
   
+  # Format X axis label
+  xlabel = stringr::str_to_title(xval)
+  if(xlabel=="Corrected_pedigree"){
+    xlabel = "Genotype"
+  }
+  
   # Make plot
   #colorscale = c("#000000","#2b2b2b", "#000080","#0000FF")
   #colorbreaks = c(0, min_prevalence*0.999, min_prevalence, 1)
@@ -110,11 +119,14 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
     geom_text(color="white") +
     theme(
       axis.text = element_text(size=15, face="bold"),
-      axis.text.x = element_text(angle=90),
-      axis.title = element_text(size=15,face="bold")
+      axis.text.x = element_text(angle=90, vjust=0.5),
+      axis.title = element_text(size=15,face="bold"),
+      plot.subtitle = element_text(face="italic")
     ) +
-    labs(y = myrank, x=xval, 
-         title=paste("Core microbiome of samples (only counts when >=",min_fraction,"of a sample)") )+
+    labs(y = myrank, x=xlabel, 
+         title=paste("Core Microbiome by",xlabel),
+         subtitle=paste("( * = present at ≥", round(min_fraction*100, digits=1),
+                        "% abundance in ≥", round(min_prevalence*100, digits=0), "% of samples)", sep="") ) +
   scale_fill_gradientn(colors=colorscale, values=colorbreaks) +
     scale_y_discrete(limits=rev)   # Reverse Y axis
   
