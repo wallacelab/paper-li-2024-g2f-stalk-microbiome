@@ -12,7 +12,7 @@ library(vegan) # for mantel test
 library(rbiom)
 library(phyloseq)
 
-# Variables to ignore from sampled ata
+# Variables to ignore from sampled data
 to_ignore = c("location", "pedigree", "rep_number", "plot_number", "Corrected_pedigree",
               "Sub", "Grower", "Day.before.extract", "Date.Received","Date.Reported")
 ncores=7 # Parallel cores to use
@@ -27,11 +27,11 @@ asvs = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phylo
 
 # Merge by location
 better_mean = function(x){mean(x, na.rm=TRUE)}
-asv_locs = merge_samples(asvs, group="location", fun=better_mean)
+asv_locs = merge_samples(asvs, group="location", fun=better_mean) # Note: documentation says OTU table ignores the mean function
 asv_locs.rarefy = rarefy_even_depth(asv_locs, rngseed=1, replace=FALSE)
 
 # Calculate various Beta diversity distances
-counts = t(otu_table(asv_locs.rarefy))  # Apparentlt flipped rows/cols
+counts = t(otu_table(asv_locs.rarefy))  # Apparently flipped rows/cols
 mytree = phy_tree(asv_locs.rarefy)
 betas = list()  #List to hold results
 betas[['Weighted Unifrac']] = rbiom::beta.div(counts, method="unifrac", weighted=TRUE, tree=mytree)
