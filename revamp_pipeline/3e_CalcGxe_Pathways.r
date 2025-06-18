@@ -11,7 +11,7 @@ library(MASS)
 # Global variables
 #pathway_file="0_data_files/path_abun_unstrat_descrip.tsv" # Original analysis; DEPRECATED
 pathway_file="3_GxE/3d_picrust2_predictions/pathways_out/path_abun_unstrat.tsv.gz" # Redone with exact GxE sample dataset
-max_sample_missing=70 # Pathway descriptions with 0s (=missing) in more than this many samples will be removed
+max_sample_missing=0.2 # Fraction of pathway counts with 0s (=missing) in more than this many samples will be removed
 n_diagnostics=12 # Number of pathways to plot diagnostic plots for transmforations
 fdr_cutoff=0.01 # Cutoff to consider a pathway significant
 
@@ -24,8 +24,8 @@ metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds
 # Read and preprocess pathway descriptions
 pathway_description <- read.table(pathway_file, sep = "\t", header = TRUE, check.names = TRUE, row.names = 1)
 colnames(pathway_description) <- gsub("\\.", "-", colnames(pathway_description))
-pathway_description$description <- NULL  # Remove description to prevent console crash
-pathway_description <- pathway_description[rowSums(pathway_description == 0) <= max_sample_missing, ]
+fraction_missing = rowSums(pathway_description == 0)/ncol(pathway_description)
+pathway_description <- pathway_description[fraction_missing <= max_sample_missing, ]
 pathways = rownames(pathway_description)
 
 # Prepare pathway data
