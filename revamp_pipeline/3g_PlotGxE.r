@@ -17,6 +17,12 @@ fdr_cutoff.pathways=0.01 # FDR cutoff for GxE pathways
 colorkey = c("Maize Genotype" = "#74afda", "GXE" = "#00a693", "Environment" = "#da9100")
 taxa_levels=c("Phylum", "Class","Order","Family","Genus","Species")
 
+# Formatting options
+alpha.remove=c("Observed", "Simpson")
+alpha.namekey=c("Observed.log" = "Observed ASVs (log)", "Simpson.reflect_log" = "Simpson (reflect, log)")
+beta.namekey = c("bray"="Bray-Curtis", "jaccard"="Jaccard", "unweighted"="Unweighted UniFrac",
+                 "weighted" = "Weighted UniFrac")
+
 #########
 # Alpha and Beta Diversity
 #########
@@ -25,11 +31,14 @@ taxa_levels=c("Phylum", "Class","Order","Family","Genus","Species")
 alpha = alpha %>%
   rename(metric=alpha_diversity, pvalue=p, fraction_explained=Value) %>%
   select(category, metric, test_var, fraction_explained, pvalue) %>%
-  filter(test_var != "Residuals")
+  filter(test_var != "Residuals") %>%
+  filter(! metric %in% alpha.remove) %>%
+  mutate(metric = ifelse(metric %in% names(alpha.namekey), yes=alpha.namekey[metric], no=metric))
 beta = beta %>%
   rename(metric=Type, pvalue = Pr..F., fraction_explained=heritability)%>%
   select(category, metric, test_var, fraction_explained, pvalue) %>%
-  filter(test_var != "Residuals")
+  filter(test_var != "Residuals") %>%
+  mutate(metric = ifelse(metric %in% names(beta.namekey), yes=beta.namekey[metric], no=metric))
 
 # Helper function for alpha and beta diversity plots
 div_barplot = function(plotdata, set="???"){
