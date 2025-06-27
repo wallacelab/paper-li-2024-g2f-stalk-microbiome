@@ -61,7 +61,6 @@ ggplot(readcounts) +
 
 
 # Readcounts again, but by sample so can do a violin plot
-
 levels = unique(core$taxon_level)
 readcounts.bysample = lapply(levels, function(mylevel){
   # Get key for ASV table
@@ -90,6 +89,7 @@ readcounts.bysample = lapply(levels, function(mylevel){
          set=factor(set, levels=c("noncore", "core"))) 
 
 # Summarize
+core.bysample = filter(readcounts.bysample, set=="core")
 bysample_summary = core.bysample %>%
   group_by(level) %>%
   summarize(mean_percent = mean(percent), median_percent = median(percent)) %>%
@@ -97,7 +97,6 @@ bysample_summary = core.bysample %>%
 
 
 # Plot distribution by samples
-core.bysample = filter(readcounts.bysample, set=="core")
 coreplot = ggplot(core.bysample) +
   aes(x=level, y=percent) +
   geom_violin(fill="lightblue") +
@@ -130,4 +129,6 @@ stepdown = lapply(names(prev.split), function(mylevel){
 # Plot
 ggplot(stepdown) +
   aes(x=steps, y=percent, color=level) +
-  geom_line()
+  geom_line() +
+  labs(title="Percent core at different cutoffs",
+       x="Fraction to be core", y="% Remaining")
