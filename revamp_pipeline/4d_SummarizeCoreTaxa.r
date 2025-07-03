@@ -127,8 +127,9 @@ stepdown = lapply(names(prev.split), function(mylevel){
   mutate(level = factor(level, levels = unique(prevalence$taxon_level)))
 
 # Plot
-ggplot(stepdown) +
+stepplot = ggplot(stepdown) +
   aes(x=steps, y=percent, color=level) +
   geom_line() +
   labs(title="Percent core at different cutoffs",
        x="Fraction to be core", y="% Remaining")
+ggsave(stepplot, file="4_CoreMicrobiome/4d_core_percent_dropoff.png", width=4, height=3)

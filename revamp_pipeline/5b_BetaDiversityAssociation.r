@@ -28,7 +28,7 @@ asvs = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.rarefy1500.phylo
 # Merge by location
 better_mean = function(x){mean(x, na.rm=TRUE)}
 asv_locs = merge_samples(asvs, group="location", fun=better_mean) # Note: documentation says OTU table ignores the mean function
-asv_locs.rarefy = rarefy_even_depth(asv_locs, rngseed=1, replace=FALSE)
+asv_locs.rarefy = rarefy_even_depth(asv_locs, rngseed=1, replace=FALSE) # Results in 18k per location because NYH3 has 18k total reads
 
 # Calculate various Beta diversity distances
 counts = t(otu_table(asv_locs.rarefy))  # Apparently flipped rows/cols
