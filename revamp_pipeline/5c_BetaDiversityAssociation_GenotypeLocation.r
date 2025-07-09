@@ -14,12 +14,12 @@ library(gridExtra)
 #   (=dimentions) when first ran. Is that an error?
 # TODO: Jason concerned that Mantel test generating a bunch of "permutations < minperm", implying
 #   that the number of possible permutations is small.Too small a dataset to work with?
-# TODO: Too many images generated. Redo so just 1 per environmental factor
 
 # Load metadata (not sure this exactly the same as originally specified, which was 
 #   G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location. Not sure what
 #   "filtered selected location" means)
-metadata = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds") %>% 
+asvs = readRDS("3_GxE/3a_asv_table.rarefied.filt_for_gxe.rds")
+metadata = asvs %>% 
   sample_data() %>%
   data.frame() %>%
   rownames_to_column("SampleID")
@@ -40,6 +40,9 @@ calc_distance_vector <- function(DM) {
   lower_tri <- DM[lower.tri(DM)]
   return(lower_tri)
 }
+
+# Better mean function for mergine phyloseq
+better_mean = function(x){mean(x, na.rm=TRUE)}
 
 # Function to perform Mantel test and generate plot if significant
 perform_mantel_and_plot <- function(genotype, env_factor, env_distance, unifrac_distance, prefix) {
@@ -84,6 +87,7 @@ perform_mantel_and_plot <- function(genotype, env_factor, env_distance, unifrac_
   mantel_result <- mantel(env_distance_aligned, unifrac_distance_aligned, method = "pearson", permutations = 999)
   
   # Plot if the association is significant
+  plot_result=NA
   if (mantel_result$signif <= 0.05 && !is.na(mantel_result$signif)) {
     env_vector <- calc_distance_vector(env_distance_aligned)
     unifrac_vector <- calc_distance_vector(unifrac_distance_aligned)
@@ -98,17 +102,20 @@ perform_mantel_and_plot <- function(genotype, env_factor, env_distance, unifrac_
       annotate("text", x = Inf, y = Inf, hjust = 1.1, vjust = 1.1,
                label = sprintf("p-value = %.3f\nR² = %.3f", mantel_result$signif, mantel_result$statistic), size = 4)
     
-    plot_name <- paste0("5_Associations/5c_", env_factor, "_", gsub("/", "X", genotype), "_", prefix, "_unifrac.png")
+    #plot_name <- paste0("5_Associations/5c_", env_factor, "_", gsub("/", "X", genotype), "_", prefix, "_unifrac.png")
     #ggsave(plot_name, gg, width = 10, height = 10)
-    return(gg)
+    #return(gg)
+    plot_result=gg
   }
   else{
     label=paste(env_factor,"\nnot assoicated with\n",genotype)
     nullplot = ggplot() + 
              annotate("text", x = 4, y = 25, size=8, label = label, color="red") + 
              theme_void()
-    return(nullplot)
+    #return(nullplot)
+    plot_result=nullplot
   }
+  to_return = list(mantel=mantel_result, plot=plot_result)
 }
 
 # Set up lists to hold plots
@@ -119,18 +126,39 @@ for (env_factor in environment_factors) {
   unweighted_plots[[env_factor]] = list()
 }
 
+# Set up list to hold mantel results
+weighted_mantels = list()
+unweighted_mantels = list()
+
+# Helper function to format mantel results
+format_mantel_results=function(genotype, env_favtor, mymantel){
+  data.frame(genotype, env_factor, n_perms = mymantel$permutations, p=mymantel$signif)
+}
+
 # Iterating through genotypes and environmental factors
 for (genotype in unique(metadata$Corrected_pedigree)) {
   print(genotype)
-  genotype_dir_name <- gsub("\\/", "X", genotype)
-  directory_name <- paste0("0_data_files/distance_matrices_for_beta_associations_by_genotype/core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-"
-                           ,genotype_dir_name, "-by-location-3000")
+  # genotype_dir_name <- gsub("\\/", "X", genotype)
+  # directory_name <- paste0("0_data_files/distance_matrices_for_beta_associations_by_genotype/core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-"
+  #                          ,genotype_dir_name, "-by-location-3000")
+  # 
+  # weighted_path <- paste0(directory_name, "/weighted_unifrac_distance_matrix.qza")
+  # unweighted_path <- paste0(directory_name, "/unweighted_unifrac_distance_matrix.qza")
+  # 
+  # genotype_location_weighted_unifrac <- read_qza_matrix(weighted_path)
+  # genotype_location_unweighted_unifrac <- read_qza_matrix(unweighted_path)
   
-  weighted_path <- paste0(directory_name, "/weighted_unifrac_distance_matrix.qza")
-  unweighted_path <- paste0(directory_name, "/unweighted_unifrac_distance_matrix.qza")
+  # Subset data to just this genotype and pull out needed info
+  targets = prune_samples(metadata$Corrected_pedigree==genotype, asvs)
+  targets.mergeloc = merge_samples(targets, group="location", fun=better_mean) # Note: documentation says OTU table ignores the mean function
+  targets.mergeloc.rarefy = rarefy_even_depth(targets.mergeloc, rngseed=1, replace=FALSE) 
   
-  genotype_location_weighted_unifrac <- read_qza_matrix(weighted_path)
-  genotype_location_unweighted_unifrac <- read_qza_matrix(unweighted_path)
+  target_matrix = targets.mergeloc.rarefy %>% otu_table() %>% as.matrix() %>% t()
+  mytree = targets.mergeloc.rarefy %>% phy_tree
+  
+  # Calcuate UniFrac distances
+  genotype_location_weighted_unifrac = rbiom::beta.div(target_matrix, method="unifrac", tree=mytree, weighted=TRUE) %>% as.matrix()
+  genotype_location_unweighted_unifrac = rbiom::beta.div(target_matrix, method="unifrac", tree=mytree, weighted=FALSE) %>% as.matrix()
   
   for (env_factor in environment_factors) {
 
@@ -139,12 +167,14 @@ for (genotype in unique(metadata$Corrected_pedigree)) {
     env_distance <- read_qza_matrix(env_factor_path)
     
     # Perform Mantel tests and plot for weighted UniFrac distances
-    weightplot = perform_mantel_and_plot(genotype, env_factor, env_distance, genotype_location_weighted_unifrac, "weighted")
-    weighted_plots[[env_factor]][[genotype]] = weightplot
+    weight.results = perform_mantel_and_plot(genotype, env_factor, env_distance, genotype_location_weighted_unifrac, "weighted")
+    weighted_plots[[env_factor]][[genotype]] = weight.results$plot
+    weighted_mantels[[paste(env_factor, genotype)]] = format_mantel_results(genotype, env_favtor, weight.results$mantel)
     
     # Perform Mantel tests and plot for unweighted UniFrac distances
-    unweightplot = perform_mantel_and_plot(genotype, env_factor, env_distance, genotype_location_unweighted_unifrac, "unweighted")
-    unweighted_plots[[env_factor]][[genotype]] = unweightplot
+    unweight.results = perform_mantel_and_plot(genotype, env_factor, env_distance, genotype_location_unweighted_unifrac, "unweighted")
+    unweighted_plots[[env_factor]][[genotype]] = unweight.results$plot
+    unweighted_mantels[[paste(env_factor, genotype)]] = format_mantel_results(genotype, env_favtor, unweight.results$mantel)
   }
 }
 
@@ -158,3 +188,15 @@ for (env_factor in environment_factors) {
   ggsave(unweightouts, file=paste("5_Associations/5c_", env_factor,".unweighted.png", sep=""),
          width=20, height=20)
 }
+
+# Output mantel test results
+format_mantels_output = function(mymantels, mymetric){
+  mymantels %>%
+    bind_rows() %>%
+    mutate(metric=mymetric, fdr_adjusted=p.adjust(p, method="fdr")) %>%
+    relocate("metric")
+}
+format_mantels_output(weighted_mantels, "Weighted Unifrac") %>%
+  write.csv(file="5_Associations/5c_mantels.weighted.csv", row.names=FALSE)
+format_mantels_output(unweighted_mantels, "Unweighted Unifrac") %>%
+  write.csv(file="5_Associations/5c_mantels.unweighted.csv", row.names=FALSE)

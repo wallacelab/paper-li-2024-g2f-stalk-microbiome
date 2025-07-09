@@ -11,6 +11,7 @@ library(gridExtra)
 library(vegan) # for mantel test
 library(rbiom)
 library(phyloseq)
+library(tidyverse)
 
 # Variables to ignore from sampled data
 to_ignore = c("location", "pedigree", "rep_number", "plot_number", "Corrected_pedigree",
@@ -31,7 +32,7 @@ asv_locs = merge_samples(asvs, group="location", fun=better_mean) # Note: docume
 asv_locs.rarefy = rarefy_even_depth(asv_locs, rngseed=1, replace=FALSE) # Results in 18k per location because NYH3 has 18k total reads
 
 # Calculate various Beta diversity distances
-counts = t(otu_table(asv_locs.rarefy))  # Apparently flipped rows/cols
+counts = otu_table(asv_locs.rarefy) %>% t()  # Apparently flipped rows/cols
 mytree = phy_tree(asv_locs.rarefy)
 betas = list()  #List to hold results
 betas[['Weighted Unifrac']] = rbiom::beta.div(counts, method="unifrac", weighted=TRUE, tree=mytree)
@@ -153,6 +154,44 @@ plot2 = ggplot(plotdata) +
             color="black", vjust=2, hjust=-0.1)
 
 ggsave(plot2, file="5_Associations/5b_mantel_tests.jgw_alt.png", width=10, height=8)
+
+
+################
+# Alternative formatted for publication
+################
+
+# Helper function to fix environment names
+fix_labels = function(x){
+  sapply(x, switch, Potassium.ppm.K = "Δ Potassium (ppm)",
+         Relative.Humidity.... = "Δ Relative Humidity (%)",
+         Wind.Speed..m.s. = "Δ Wind Speed (m/s)",
+         Wind.Gust..m.s. = "Δ Wind Gust (m/s)")
+}
+
+# Make pub data to just what want
+pubdata = plotdata %>%
+  filter(beta == "Weighted Unifrac" & env != "E.Depth") %>%
+  mutate(env = fix_labels(env))
+pubsig = significant %>%
+  filter(beta == "Weighted Unifrac" & env != "E.Depth" ) %>%
+  mutate(env = fix_labels(env))
+pubplot = ggplot(pubdata) + 
+  aes(x=envdist, y=betadist, color=env) +
+  geom_point() + 
+  geom_smooth(method="lm", color="black") +
+  facet_wrap( ~ env, scales="free", strip.position="bottom", nrow=1) +
+  theme(legend.position="none") +
+  geom_text(mapping=aes(label=label), x=-Inf, y=Inf, data=pubsig,
+            color="black", vjust=2, hjust=-0.1) +
+  labs(x="Difference in Environmental Factors", y="Distance (Weighted Unifrac)")
+
+ggsave(pubplot, file="5_Associations/5b_mantel_tests.pub.png", width=8, height=3)
+
+
+
+
+
+
 
 ###############
 # Principal Components
