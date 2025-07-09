@@ -156,9 +156,22 @@ heritability_plot.significant = make_herit_plot(herits %>% filter(fdr <= fdr_cut
 
 # Save data & plots
 ggsave(heritability_plot, file="3_GxE/3e_MetaCyc_pathway_GXE.png", height = 10, width = 10, device = "png")
-ggsave(heritability_plot.significant, file="3_GxE/3e_MetaCyc_pathway_GXE.significant_only.png", height = 10, width = 10, device = "png")
+ggsave(heritability_plot.significant, file="3_GxE/3e_MetaCyc_pathway_GXE.significant_only.png", height = 4, width = 4, device = "png")
 write.csv(herits, file="3_GxE/3e_MetaCyc_pathway_GXE.csv", row.names=FALSE)
 
 
 
 # Save summary table of significance & variance explained
+medians = herits %>%
+  group_by(term) %>%
+  summarize(median_herit = median(herit))
+medians.sig = herits %>%
+  filter(fdr <= fdr_cutoff) %>%
+  group_by(term) %>%
+  summarize(median_herit_significant_only = median(herit))
+
+# Output summary table
+outsummary = significant %>%
+  left_join(medians, by="term") %>%
+  left_join(medians.sig, by="term")
+write.csv(outsummary, file="3_GxE/3e_MetaCyc_pathway_GXE.summary.csv", row.names=FALSE)
