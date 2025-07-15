@@ -28,7 +28,8 @@ taxonomy = read.csv("0_data_files/taxonomy.tsv",sep="\t",row.names =1)
 phy_tree	=	read_tree("0_data_files/tree.nwk")
 
 #import metadata table and convert to matrix 
-metadata	=	read.table("0_data_files/G2f_2019_sub_corrected_metadata.tsv",sep ="\t",header = 1,row.names=1)
+#metadata	=	read.table("0_data_files/G2f_2019_sub_corrected_metadata.tsv",sep ="\t",header = 1,row.names=1)  # Old metadata; has some errors in weather info
+metadata	=	read.table("1_parsed_files//1_G2f_2019_sub_corrected_metadata.fix_weather.tsv",sep ="\t",header = 1,row.names=1)  # Corrected weather info
 
 
 #############
