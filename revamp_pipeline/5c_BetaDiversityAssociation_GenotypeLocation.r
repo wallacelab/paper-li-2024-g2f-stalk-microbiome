@@ -9,16 +9,6 @@ library(tidyverse)
 library(phyloseq)
 library(gridExtra)
 
-# TODO - Original analysis used a slightyl different metadata file for "Temperature..C.", "Relative.Humidity....", "Rainfall..mm.", "Solar.Radiation..W.m2."
-#     Figure out which is correct and correct at source (=when making the RDS file)
-# Original metadata file was new_G2F_dada2/G2F_2019_environmental_data_revised_for_mantel.csv
-#    Now, where did that come from?
-
-# TODO - At this point I think I just need to redo the weather data myself and make sure it's believable
-#   Sum or Average from planting date to harvest date
-#   Make plots to make sure values make sense
-#   Use in environmental associations
-
 # Load metadata (not sure this exactly the same as originally specified, which was 
 #   G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location. Not sure what
 #   "filtered selected location" means)
@@ -30,14 +20,7 @@ metadata = asvs %>%
 
 # Environmental factors to iterate over
 environment_factors <- c("X1.1.Soil.pH", "WDRF.Buffer.pH", "X1.1.S.Salts.mmho.cm", "Organic.Matter.LOI..", "Nitrate.N.ppm.N", "lbs.N.A",
-                         "Potassium.ppm.K", "Sulfate.S.ppm.S", "Calcium.ppm.Ca", "Magnesium.ppm.Mg", "CEC.Sum.of.Cations.me.100g", "Temperature..C.", 
-                         "Relative.Humidity....", "Rainfall..mm.", "Solar.Radiation..W.m2.")
-
-# Function to read QZA file and return a matrix
-read_qza_matrix <- function(path) {
-  qza_data <- read_qza(path)
-  return(as.matrix(qza_data$data))
-}
+                         "Potassium.ppm.K", "Sulfate.S.ppm.S", "Calcium.ppm.Ca", "Magnesium.ppm.Mg", "CEC.Sum.of.Cations.me.100g")
 
 # Function to extract distance vectors from distance matrices
 calc_distance_vector <- function(DM) {
@@ -105,10 +88,7 @@ perform_mantel_and_plot <- function(genotype, env_factor, env_distance, unifrac_
       theme_minimal() +
       annotate("text", x = Inf, y = Inf, hjust = 1.1, vjust = 1.1,
                label = sprintf("p-value = %.3f\nR² = %.3f", mantel_result$signif, mantel_result$statistic), size = 4)
-    
-    #plot_name <- paste0("5_Associations/5c_", env_factor, "_", gsub("/", "X", genotype), "_", prefix, "_unifrac.png")
-    #ggsave(plot_name, gg, width = 10, height = 10)
-    #return(gg)
+
     plot_result=gg
   }
   else{
@@ -159,42 +139,11 @@ calc_env_dist = function(metadata, myfactor){
 env_matrices = list()
 for (env_factor in environment_factors) {
   env_matrices[[env_factor]] = calc_env_dist(metadata, env_factor)
-  
-  # Confirm match previous calculations; first 11 do, but temp, humidity, rainfall, & radiation don't
-  tmp = env_matrices[[env_factor]]
-  env_factor_path <- paste0("0_data_files/distance_matrices_for_beta_associations/", env_factor, "_distance_matrix.qza")
-  old_distance <- read_qza_matrix(env_factor_path)
-  old_distance = old_distance[rownames(tmp), colnames(tmp)] # Match up
-  if(identical(tmp, old_distance)){
-    cat(env_factor, "matches exactly\n")
-  }else{
-    cat(env_factor, "DOES NOT MATCH\n")
-    mycor = cor(as.numeric(tmp), as.numeric(old_distance))
-    cat("\tcor = ", mycor,"\n")
-  }
-  
-  # Direct calculate from file
-  weather_info = read.delim("0_data_files/G2F_2019_weather_average_and_sum.tsv") %>%
-    column_to_rownames("location")
-  if(env_factor %in% names(weather_info)){
-    weather_dist = weather_info %>% 
-      select(all_of(env_factor)) %>%
-      dist() %>%
-      as.matrix()
-    weather_dist = weather_dist[rownames(old_distance), colnames(old_distance)]
-    if(identical(weather_dist, old_distance)){
-      cat(env_factor, "matches exactly from locations file\n")
-    }else{
-      cat(env_factor, "DOES NOT MATCH LOCATIONS FILE\n")
-      mycor = cor(as.numeric(weather_dist), as.numeric(old_distance))
-      cat("\tcor = ", mycor,"\n")
-    }
-  }
 }
 
 # Iterating through genotypes and environmental factors
 for (genotype in unique(metadata$Corrected_pedigree)) {
-  print(genotype)
+  print(paste("### Calculating values for", genotype, "###"))
 
   # Subset data to just this genotype and pull out needed info
   targets = prune_samples(metadata$Corrected_pedigree==genotype, asvs)

@@ -16,7 +16,7 @@ library(tidyverse)
 # Load data
 alpha_diversity = read.csv("2_Diversity/2a_alpha_diversity.jgw.csv")
 G2f_2019_soil_data <- read.csv("0_data_files/g2f_2019_soil_data.csv", sep = ",")
-G2f_2019_weather_data <- read.csv("0_data_files//G2F_2019_weather_average_and_sum.tsv", sep = "\t")
+#G2f_2019_weather_data <- read.csv("0_data_files//G2F_2019_weather_average_and_sum.tsv", sep = "\t") # DEPRECATED - Not using weather info b/c of data unreliability
 
 
 ###########################################################
@@ -43,9 +43,9 @@ G2F_2019_median_alpha_diversity_by_location_data <- alpha_diversity %>%
   )
 
 # Joining soil and weather data with median alpha diversity data
-G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data <- G2F_2019_median_alpha_diversity_by_location_data %>%
+G2F_2019_median_alpha_diversity_by_location_with_soil_data <- G2F_2019_median_alpha_diversity_by_location_data %>%
   left_join(G2f_2019_soil_data, by = c("location" = "Location")) %>%
-  left_join(G2f_2019_weather_data, by = "location") %>%
+  #left_join(G2f_2019_weather_data, by = "location") %>%
   filter(!is.na(X1.1.Soil.pH)) %>%
   as.data.frame()
 
@@ -61,14 +61,14 @@ G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data <- G2F_2019_m
 #   return(lm_summaries)
 # }
 # 
-# shannon_result_summary <- create_lm(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data, median_shannon ~ .)
-# observed_features_result_summary <- create_lm(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data, median_observed_features ~ .)
-# simpson_result_summary <- create_lm(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data, median_simpson ~ .)
+# shannon_result_summary <- create_lm(G2F_2019_median_alpha_diversity_by_location_with_soil_data, median_shannon ~ .)
+# observed_features_result_summary <- create_lm(G2F_2019_median_alpha_diversity_by_location_with_soil_data, median_observed_features ~ .)
+# simpson_result_summary <- create_lm(G2F_2019_median_alpha_diversity_by_location_with_soil_data, median_simpson ~ .)
 
 # Get metrics to test
 metrics = names(G2F_2019_median_alpha_diversity_by_location_data) %>% setdiff("location")
 # Get environmental covariates to test
-covariates = names(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data) %>%
+covariates = names(G2F_2019_median_alpha_diversity_by_location_with_soil_data) %>%
   setdiff(c("location", metrics))  # Remove 'location' and metrics to test
 
 # Test
@@ -80,7 +80,7 @@ for(metric in metrics) {
   for(covariate in covariates){
     key = paste(metric, covariate, sep="$")
     myformula = paste(metric, "~", covariate)
-    mymodel = lm(myformula, data=G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data)
+    mymodel = lm(myformula, data=G2F_2019_median_alpha_diversity_by_location_with_soil_data)
     models[[key]] = mymodel
     summaries[[key]] = summary(mymodel)
     anovas[[key]] = anova(mymodel)
@@ -136,7 +136,7 @@ labellookup = c("median_shannon" = "Median Shannon Index",
 # Soil pH - original
 soilplots = lapply(metrics, function(mymetric){
   mylabel = labellookup[mymetric]
-  plot_diversity_vs_soil_pH(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data,
+  plot_diversity_vs_soil_pH(G2F_2019_median_alpha_diversity_by_location_with_soil_data,
                             "X1.1.Soil.pH", mymetric, xlab = "Soil pH", ylab = mylabel)
 })
 soilplots = ggarrange(plotlist = soilplots, nrow=1, labels=LETTERS[1:3], 
@@ -146,7 +146,7 @@ ggsave(soilplots, file="5_Associations/5a_median_alpha_diversity_plot.soil_ph.jg
 # Soil buffering capacity
 bufferplots = lapply(metrics, function(mymetric){
   mylabel = labellookup[mymetric]
-  plot_diversity_vs_soil_pH(G2F_2019_median_alpha_diversity_by_location_with_soil_weather_data,
+  plot_diversity_vs_soil_pH(G2F_2019_median_alpha_diversity_by_location_with_soil_data,
                             "WDRF.Buffer.pH", mymetric, xlab = "WDRF buffer pH", ylab=mylabel)
 })
 bufferplots = ggarrange(plotlist = bufferplots, nrow=1, labels=LETTERS[4:6], 

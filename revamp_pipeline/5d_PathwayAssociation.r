@@ -16,7 +16,7 @@ library(phyloseq)
 # File locations
 pathway_file = "0_data_files/path_abun_unstrat_descrip.tsv"
 soil_file = "0_data_files/g2f_2019_soil_data.csv"
-weather_file = "0_data_files//G2F_2019_weather_average_and_sum.tsv"
+#weather_file = "0_data_files//G2F_2019_weather_average_and_sum.tsv"
 
 # Load metadata
 metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds") %>% 
@@ -26,8 +26,8 @@ metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds
 
 # Environmental factors to focus on
 environmental_factors <- c("X1.1.Soil.pH", "WDRF.Buffer.pH", "X1.1.S.Salts.mmho.cm", "Organic.Matter.LOI..", "Nitrate.N.ppm.N", "lbs.N.A",                   
-                           "Potassium.ppm.K", "Sulfate.S.ppm.S", "Calcium.ppm.Ca", "Magnesium.ppm.Mg", "CEC.Sum.of.Cations.me.100g", "Temperature..C.", "Relative.Humidity....", "Rainfall..mm.", "Solar.Radiation..W.m2.")
-target_factors = c("Relative.Humidity....", "Potassium.ppm.K")
+                           "Potassium.ppm.K", "Sulfate.S.ppm.S", "Calcium.ppm.Ca", "Magnesium.ppm.Mg", "CEC.Sum.of.Cations.me.100g")
+target_factors = c( "Potassium.ppm.K")
 
 #################
 # Functions
@@ -68,22 +68,22 @@ calculate_average_pathway_by_location <- function(pathway_description, metadata)
 ###########################################################################
 
 # Function to read and merge environmental data with pathway data
-merge_environmental_data <- function(pathway_data, soil_file, weather_file) {
+merge_environmental_data <- function(pathway_data, soil_file) { #, weather_file) {
   # Load soil and weather data
   soil_data <- read.csv(soil_file, sep = ",", check.names = TRUE)
-  weather_data <- read.csv(weather_file, sep = "\t", check.names = TRUE)
+  #weather_data <- read.csv(weather_file, sep = "\t", check.names = TRUE)
   
   # Merge soil data with alpha diversity data already in pathway data
   pathway_soil_merged <- left_join(pathway_data, soil_data, by = c("location" = "Location"))
   
-  # Merge the above with weather data
-  pathway_soil_weather_merged <- left_join(pathway_soil_merged, weather_data, by = "location")
+  # # Merge the above with weather data
+  # pathway_soil_weather_merged <- left_join(pathway_soil_merged, weather_data, by = "location")
   
   # Clean up unnecessary columns, if required
-  pathway_soil_weather_merged$Texture <- NULL
-  pathway_soil_weather_merged$Texture.No <- NULL
+  pathway_soil_merged$Texture <- NULL
+  pathway_soil_merged$Texture.No <- NULL
   
-  return(pathway_soil_weather_merged)
+  return(pathway_soil_merged)
 }
 
 #####################################################################################
@@ -134,7 +134,7 @@ annotate_significant_results <- function(significant_results, annotation_path) {
 
 pathway_description_1 <- preprocess_pathway_description(pathway_file)
 average_pathway_location_1 <- calculate_average_pathway_by_location(pathway_description_1, metadata)
-average_pathway_location_metadata_2 <- merge_environmental_data(average_pathway_location_1, soil_file, weather_file)
+average_pathway_location_metadata_2 <- merge_environmental_data(average_pathway_location_1, soil_file) #, weather_file)
 #colnames(average_pathway_location_metadata_2)
 
 
