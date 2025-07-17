@@ -28,8 +28,8 @@ taxonomy = read.csv("0_data_files/taxonomy.tsv",sep="\t",row.names =1)
 phy_tree	=	read_tree("0_data_files/tree.nwk")
 
 #import metadata table and convert to matrix 
-#metadata	=	read.table("0_data_files/G2f_2019_sub_corrected_metadata.tsv",sep ="\t",header = 1,row.names=1)  # Old metadata; has some errors in weather info
-metadata	=	read.table("1_parsed_files//1_G2f_2019_sub_corrected_metadata.fix_weather.tsv",sep ="\t",header = 1,row.names=1)  # Corrected weather info
+metadata	=	read.table("0_data_files/G2f_2019_sub_corrected_metadata.tsv",sep ="\t",header = 1,row.names=1)
+
 
 
 #############
@@ -83,6 +83,13 @@ taxonomy <- as.matrix(revised_taxonomy)
 #merge OH43/B37 and B37/OH43, since are basically the same hybrid. (We're not doing maternal effects in this study)
 metadata$Corrected_pedigree <- gsub(".*^OH43/B37","B37/OH43",metadata$Corrected_pedigree)
 
+# Remove weather metadata; eventually determined there were too many issues
+weather_stats = c("Temperature..C.", "Dew.Point..C.", "Relative.Humidity....", 
+                  "Solar.Radiation..W.m2.", "Rainfall..mm.", "Wind.Speed..m.s.",
+                  "Wind.Direction..degrees.", "Wind.Gust..m.s.", "Soil.Temperature..C.",
+                  "Soil.Moisture...VWC.", "PAR..uM.m2s.")
+metadata = subset(metadata, select = ! names(metadata) %in% weather_stats)
+
 ###############
 # Convert to Phylsoeq object
 ###############
@@ -95,8 +102,13 @@ META = sample_data(metadata)
 #build phyloseq object 
 ps	=	phyloseq(OTU,TAX,phy_tree,META)
 
-#remove NCH1-1-159 samples; site  for m -> Sent us 2 samples and don't know which one is correct.
+#remove NCH1-1-159 samples; Sent us 2 samples and don't know which one is correct.
 ps <- subset_samples(ps, !rownames(sample_data(ps)) %in% duplicates)
+
+# Remove NEH2 samples in 2nd rep (had 2-3 week delay on planting; figure too different to compare)
+neh2_rep2 = sample_data(ps)$location=="NEH2" & sample_data(ps)$rep_number==2
+neh2_rep2[is.na(neh2_rep2)] = FALSE  # Don't want accidental filtering based on NAs
+ps <- subset_samples(ps, !neh2_rep2)
 
 # Rarefy to specific depth using the seed value from earlier
 ps.rarefied = rarefy_even_depth(ps, sample.size=rarefy_depth, replace=F, rngseed=rarefy_seed)

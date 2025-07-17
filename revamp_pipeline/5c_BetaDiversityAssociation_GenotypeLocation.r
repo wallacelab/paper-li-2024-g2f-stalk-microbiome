@@ -7,13 +7,17 @@ library(vegan)
 library(qiime2R)
 library(tidyverse)
 library(phyloseq)
-#library(ggpubr)
 library(gridExtra)
 
-# TODO: Jason concerned that Environment Unifrac matrices didn't have same number of locations
-#   (=dimentions) when first ran. Is that an error?
-# TODO: Jason concerned that Mantel test generating a bunch of "permutations < minperm", implying
-#   that the number of possible permutations is small.Too small a dataset to work with?
+# TODO - Original analysis used a slightyl different metadata file for "Temperature..C.", "Relative.Humidity....", "Rainfall..mm.", "Solar.Radiation..W.m2."
+#     Figure out which is correct and correct at source (=when making the RDS file)
+# Original metadata file was new_G2F_dada2/G2F_2019_environmental_data_revised_for_mantel.csv
+#    Now, where did that come from?
+
+# TODO - At this point I think I just need to redo the weather data myself and make sure it's believable
+#   Sum or Average from planting date to harvest date
+#   Make plots to make sure values make sense
+#   Use in environmental associations
 
 # Load metadata (not sure this exactly the same as originally specified, which was 
 #   G2F_metadata_2019_duplicate_pedigree_ys_filtered_selected_location. Not sure what
@@ -135,19 +139,63 @@ format_mantel_results=function(genotype, env_favtor, mymantel){
   data.frame(genotype, env_factor, n_perms = mymantel$permutations, p=mymantel$signif)
 }
 
+# Helper function to make a distance matrix from an environmental variable
+calc_env_dist = function(metadata, myfactor){
+  # Set up data frame
+  tmp = metadata[,c("location", myfactor)]
+  names(tmp)[2] = "env_factor"
+  rownames(tmp) = NULL
+  # Manipulate to distance matrix
+  mymatrix = tmp %>%
+    unique() %>%
+    filter(!is.na(env_factor)) %>%
+    column_to_rownames("location") %>%
+    dist() %>%
+    as.matrix()
+  return(mymatrix)
+}
+
+# Make environmental distance matrices
+env_matrices = list()
+for (env_factor in environment_factors) {
+  env_matrices[[env_factor]] = calc_env_dist(metadata, env_factor)
+  
+  # Confirm match previous calculations; first 11 do, but temp, humidity, rainfall, & radiation don't
+  tmp = env_matrices[[env_factor]]
+  env_factor_path <- paste0("0_data_files/distance_matrices_for_beta_associations/", env_factor, "_distance_matrix.qza")
+  old_distance <- read_qza_matrix(env_factor_path)
+  old_distance = old_distance[rownames(tmp), colnames(tmp)] # Match up
+  if(identical(tmp, old_distance)){
+    cat(env_factor, "matches exactly\n")
+  }else{
+    cat(env_factor, "DOES NOT MATCH\n")
+    mycor = cor(as.numeric(tmp), as.numeric(old_distance))
+    cat("\tcor = ", mycor,"\n")
+  }
+  
+  # Direct calculate from file
+  weather_info = read.delim("0_data_files/G2F_2019_weather_average_and_sum.tsv") %>%
+    column_to_rownames("location")
+  if(env_factor %in% names(weather_info)){
+    weather_dist = weather_info %>% 
+      select(all_of(env_factor)) %>%
+      dist() %>%
+      as.matrix()
+    weather_dist = weather_dist[rownames(old_distance), colnames(old_distance)]
+    if(identical(weather_dist, old_distance)){
+      cat(env_factor, "matches exactly from locations file\n")
+    }else{
+      cat(env_factor, "DOES NOT MATCH LOCATIONS FILE\n")
+      mycor = cor(as.numeric(weather_dist), as.numeric(old_distance))
+      cat("\tcor = ", mycor,"\n")
+    }
+  }
+}
+
 # Iterating through genotypes and environmental factors
 for (genotype in unique(metadata$Corrected_pedigree)) {
   print(genotype)
-  # genotype_dir_name <- gsub("\\/", "X", genotype)
-  # directory_name <- paste0("0_data_files/distance_matrices_for_beta_associations_by_genotype/core-metrics-results-dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree-"
-  #                          ,genotype_dir_name, "-by-location-3000")
-  # 
-  # weighted_path <- paste0(directory_name, "/weighted_unifrac_distance_matrix.qza")
-  # unweighted_path <- paste0(directory_name, "/unweighted_unifrac_distance_matrix.qza")
-  # 
-  # genotype_location_weighted_unifrac <- read_qza_matrix(weighted_path)
-  # genotype_location_unweighted_unifrac <- read_qza_matrix(unweighted_path)
-  
+
   # Subset data to just this genotype and pull out needed info
   targets = prune_samples(metadata$Corrected_pedigree==genotype, asvs)
   targets.mergeloc = merge_samples(targets, group="location", fun=better_mean) # Note: documentation says OTU table ignores the mean function
@@ -163,8 +211,9 @@ for (genotype in unique(metadata$Corrected_pedigree)) {
   for (env_factor in environment_factors) {
 
     print(env_factor)
-    env_factor_path <- paste0("0_data_files/distance_matrices_for_beta_associations/", env_factor, "_distance_matrix.qza")
-    env_distance <- read_qza_matrix(env_factor_path)
+    #env_factor_path <- paste0("0_data_files/distance_matrices_for_beta_associations/", env_factor, "_distance_matrix.qza")
+    #env_distance <- read_qza_matrix(env_factor_path)
+    env_distance = env_matrices[[env_factor]] # Grab pre-computed environmental distances
     
     # Perform Mantel tests and plot for weighted UniFrac distances
     weight.results = perform_mantel_and_plot(genotype, env_factor, env_distance, genotype_location_weighted_unifrac, "weighted")
@@ -200,3 +249,7 @@ format_mantels_output(weighted_mantels, "Weighted Unifrac") %>%
   write.csv(file="5_Associations/5c_mantels.weighted.csv", row.names=FALSE)
 format_mantels_output(unweighted_mantels, "Unweighted Unifrac") %>%
   write.csv(file="5_Associations/5c_mantels.unweighted.csv", row.names=FALSE)
+
+
+
+
