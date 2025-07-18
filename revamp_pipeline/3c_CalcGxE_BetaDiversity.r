@@ -32,28 +32,6 @@ distances[["jaccard"]] = rbiom::beta.div(asv_matrix, method="jaccard") %>% as.ma
 distances[["weighted"]] = rbiom::beta.div(asv_matrix, method="unifrac", tree=mytree, weighted=TRUE) %>% as.matrix()
 distances[["unweighted"]] = rbiom::beta.div(asv_matrix, method="unifrac", tree=mytree, weighted=FALSE) %>% as.matrix()
 
-# # Quick confirmation to make sure these match QIIME 
-# # Close but not quite. given that there's 1 different taxon in each, I suspect it was just slightly different filtering
-# # They're both >99% correlated, which I consider close enough.
-# weighted_unifrac = read_qza("0_data_files/weighted_unifrac_distance_matrix.qza")
-# unweighted_unifrac = read_qza("0_data_files/unweighted_unifrac_distance_matrix.qza")
-# ## Weighted
-# weight_qiime = weighted_unifrac$data %>% as.matrix()
-# weight_rbiom = distances[["weighted"]]
-# common_taxa_w = intersect(rownames(weight_qiime), rownames(weight_rbiom))
-# weight_rbiom = weight_rbiom[common_taxa_w,common_taxa_w]
-# weight_qiime = weight_qiime[common_taxa_w,common_taxa_w]
-# plot(as.numeric(weight_qiime), as.numeric(weight_rbiom))
-# cor(as.numeric(weight_qiime), as.numeric(weight_rbiom)) # 0.993
-# ## Unweighted
-# unweight_qiime = unweighted_unifrac$data %>% as.matrix()
-# unweight_rbiom = distances[["unweighted"]]
-# common_taxa_u = intersect(rownames(unweight_qiime), rownames(unweight_rbiom))
-# unweight_rbiom = unweight_rbiom[common_taxa_w,common_taxa_w]
-# unweight_qiime = unweight_qiime[common_taxa_w,common_taxa_w]
-# plot(as.numeric(unweight_qiime), as.numeric(unweight_rbiom))
-# cor(as.numeric(unweight_qiime), as.numeric(unweight_rbiom)) # 0.9997
-
 
 ########################################################################
 

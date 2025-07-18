@@ -1,7 +1,7 @@
 "method","comparison","statistic","dr","p.value"
-"Kruskal-Wallis rank sum test","Observed by location",109.963946510072,14,5.68548466839611e-17
-"Kruskal-Wallis rank sum test","Simpson by location",120.362592751443,14,5.34307599970696e-19
-"Kruskal-Wallis rank sum test","Shannon by location",121.09642564635,14,3.83707374501295e-19
-"Kruskal-Wallis rank sum test","Observed by Corrected_pedigree",18.9465013837996,18,0.395124867379882
-"Kruskal-Wallis rank sum test","Simpson by Corrected_pedigree",17.8895938703572,18,0.462947903563126
-"Kruskal-Wallis rank sum test","Shannon by Corrected_pedigree",18.2953124915809,18,0.436363618488159
+"Kruskal-Wallis rank sum test","Observed by location",108.261757087381,14,1.21490652744663e-16
+"Kruskal-Wallis rank sum test","Simpson by location",120.254995923498,14,5.60875721917708e-19
+"Kruskal-Wallis rank sum test","Shannon by location",120.246695913413,14,5.62979141116682e-19
+"Kruskal-Wallis rank sum test","Observed by Corrected_pedigree",17.546625665054,18,0.485873180431026
+"Kruskal-Wallis rank sum test","Simpson by Corrected_pedigree",16.1687287847049,18,0.580772945252616
+"Kruskal-Wallis rank sum test","Shannon by Corrected_pedigree",16.5410186379959,18,0.554844417542597

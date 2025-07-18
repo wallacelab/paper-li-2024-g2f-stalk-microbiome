@@ -1,26 +1,26 @@
 "metric","gvlma_test","Value","p-value","Decision","pass"
-"Observed","Global Stat",1.61884752546847,0.80540072428827,"Assumptions acceptable.",TRUE
-"Observed","Skewness",1.59594863099208,0.206478295031269,"Assumptions acceptable.",TRUE
-"Observed","Kurtosis",0.00586811964165159,0.938938852880135,"Assumptions acceptable.",TRUE
-"Observed","Link Function",-7.65239475898601e-16,1,"Assumptions acceptable.",TRUE
-"Observed","Heteroscedasticity",0.0170307748347427,0.896169263324185,"Assumptions acceptable.",TRUE
-"Simpson","Global Stat",12.7915029825094,0.012340783390096,"Assumptions NOT satisfied!",FALSE
-"Simpson","Skewness",8.52251051551562,0.00350780256607597,"Assumptions NOT satisfied!",FALSE
-"Simpson","Kurtosis",2.13639415127311,0.143839637424675,"Assumptions acceptable.",TRUE
-"Simpson","Link Function",-8.28127781816409e-13,1,"Assumptions acceptable.",TRUE
-"Simpson","Heteroscedasticity",2.13259831572146,0.144196145982819,"Assumptions acceptable.",TRUE
-"Shannon","Global Stat",0.221064557710041,0.994323325584483,"Assumptions acceptable.",TRUE
-"Shannon","Skewness",0.03096569643457,0.860316940751019,"Assumptions acceptable.",TRUE
-"Shannon","Kurtosis",0.000535399883257911,0.981539628125618,"Assumptions acceptable.",TRUE
-"Shannon","Link Function",1.58710668739393e-16,0.999999989948217,"Assumptions acceptable.",TRUE
-"Shannon","Heteroscedasticity",0.189563461392213,0.66328019336434,"Assumptions acceptable.",TRUE
-"Simpson.reflect_log","Global Stat",0.576960079926729,0.965589213648206,"Assumptions acceptable.",TRUE
-"Simpson.reflect_log","Skewness",0.218904733076283,0.639875726943717,"Assumptions acceptable.",TRUE
-"Simpson.reflect_log","Kurtosis",0.328220130127074,0.566709024229797,"Assumptions acceptable.",TRUE
-"Simpson.reflect_log","Link Function",-1.17918136433119e-14,1,"Assumptions acceptable.",TRUE
-"Simpson.reflect_log","Heteroscedasticity",0.0298352167233846,0.862864654117933,"Assumptions acceptable.",TRUE
-"Observed.log","Global Stat",1.19530285552737,0.878871364926685,"Assumptions acceptable.",TRUE
-"Observed.log","Skewness",0.161115554118643,0.688131523331831,"Assumptions acceptable.",TRUE
-"Observed.log","Kurtosis",0.300124635039207,0.583804296353379,"Assumptions acceptable.",TRUE
-"Observed.log","Link Function",-6.76546941075026e-14,1,"Assumptions acceptable.",TRUE
-"Observed.log","Heteroscedasticity",0.734062666369584,0.391569481527712,"Assumptions acceptable.",TRUE
+"Observed","Global Stat",1.97248608088527,0.740819624201868,"Assumptions acceptable.",TRUE
+"Observed","Skewness",1.62517415877469,0.202371831650071,"Assumptions acceptable.",TRUE
+"Observed","Kurtosis",0.0164143297180586,0.898055258585782,"Assumptions acceptable.",TRUE
+"Observed","Link Function",5.03230775821084e-13,0.999999433990581,"Assumptions acceptable.",TRUE
+"Observed","Heteroscedasticity",0.330897592392015,0.565131030564549,"Assumptions acceptable.",TRUE
+"Simpson","Global Stat",15.4304015141965,0.00388694396748002,"Assumptions NOT satisfied!",FALSE
+"Simpson","Skewness",9.53612458620156,0.00201466689853169,"Assumptions NOT satisfied!",FALSE
+"Simpson","Kurtosis",3.32859728613408,0.0680849181702173,"Assumptions acceptable.",TRUE
+"Simpson","Link Function",2.95190774833243e-15,0.999999956649765,"Assumptions acceptable.",TRUE
+"Simpson","Heteroscedasticity",2.5656796418609,0.109205615553492,"Assumptions acceptable.",TRUE
+"Shannon","Global Stat",0.819883848156961,0.935762654292793,"Assumptions acceptable.",TRUE
+"Shannon","Skewness",0.0208237007917701,0.885260265584188,"Assumptions acceptable.",TRUE
+"Shannon","Kurtosis",0.0159220422496103,0.899587404195721,"Assumptions acceptable.",TRUE
+"Shannon","Link Function",-4.24290448198263e-15,1,"Assumptions acceptable.",TRUE
+"Shannon","Heteroscedasticity",0.783138105115585,0.37618311071242,"Assumptions acceptable.",TRUE
+"Simpson.reflect_log","Global Stat",0.487798259809328,0.974677897444677,"Assumptions acceptable.",TRUE
+"Simpson.reflect_log","Skewness",0.196075937942988,0.657907056076688,"Assumptions acceptable.",TRUE
+"Simpson.reflect_log","Kurtosis",0.205385426323664,0.650408556305088,"Assumptions acceptable.",TRUE
+"Simpson.reflect_log","Link Function",-1.0474399486078e-15,1,"Assumptions acceptable.",TRUE
+"Simpson.reflect_log","Heteroscedasticity",0.0863368955426767,0.768886734818953,"Assumptions acceptable.",TRUE
+"Observed.log","Global Stat",1.83673768128233,0.765754560375876,"Assumptions acceptable.",TRUE
+"Observed.log","Skewness",0.165315893869501,0.684308722331941,"Assumptions acceptable.",TRUE
+"Observed.log","Kurtosis",0.312166924671759,0.576353507977677,"Assumptions acceptable.",TRUE
+"Observed.log","Link Function",-4.79505639739874e-15,1,"Assumptions acceptable.",TRUE
+"Observed.log","Heteroscedasticity",1.35925486274107,0.243666662116591,"Assumptions acceptable.",TRUE

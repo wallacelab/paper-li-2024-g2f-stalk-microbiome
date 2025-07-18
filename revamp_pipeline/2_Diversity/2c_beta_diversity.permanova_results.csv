@@ -1,7 +1,7 @@
 "","metric","factor","p","R2","n_groups"
-"1","Bray-Curtis","location",1e-04,0.0297235973424581,15
-"2","Bray-Curtis","Corrected_pedigree",0.7741,0.0427467678007372,19
-"3","Unweighted_Unifrac","location",1e-04,0.124291679718355,15
-"4","Unweighted_Unifrac","Corrected_pedigree",0.001,0.0498690338716234,19
-"5","Weighted_Unifrac","location",1e-04,0.226294327349393,15
-"6","Weighted_Unifrac","Corrected_pedigree",0.0033,0.0569598913539329,19
+"1","Bray-Curtis","location",1e-04,0.0302027390077014,15
+"2","Bray-Curtis","Corrected_pedigree",0.8592,0.0437725513239821,19
+"3","Unweighted_Unifrac","location",1e-04,0.127717678525822,15
+"4","Unweighted_Unifrac","Corrected_pedigree",0.0028,0.050546735116771,19
+"5","Weighted_Unifrac","location",1e-04,0.231320069786883,15
+"6","Weighted_Unifrac","Corrected_pedigree",0.0031,0.0586181133399088,19

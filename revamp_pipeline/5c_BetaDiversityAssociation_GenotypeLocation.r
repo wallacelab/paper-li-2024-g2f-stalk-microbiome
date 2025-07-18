@@ -160,8 +160,6 @@ for (genotype in unique(metadata$Corrected_pedigree)) {
   for (env_factor in environment_factors) {
 
     print(env_factor)
-    #env_factor_path <- paste0("0_data_files/distance_matrices_for_beta_associations/", env_factor, "_distance_matrix.qza")
-    #env_distance <- read_qza_matrix(env_factor_path)
     env_distance = env_matrices[[env_factor]] # Grab pre-computed environmental distances
     
     # Perform Mantel tests and plot for weighted UniFrac distances
