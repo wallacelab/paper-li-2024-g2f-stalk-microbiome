@@ -2,95 +2,63 @@
 
 This is the workflow for Li et al. 2024's analysis of the maize stalk microbiome across the Genomes to Fields initiative. This is specifically a revamped one to be more modular and reproducible than the original one. Currently it is being stored in a subfolder to make revision easier; eventually it will be moved to the main folder.
 
-# Step 0 - ASV calling and Picrust analysis
+# Step 0 - ASV calling
 
 This is the basic analysis step, going from raw sequencing data to files ready to be imported into R for analysis.
 
 Importantly, these steps are not really meant to be run from a cloned repo, as they require the fastq files (which are WAY too big for Github). They are instead included so all the paramters used can be looked up (if necessary), and the key output files are included in 0_data_files
 
-**0a_qiime_workflow.sh**: This script uses QIIME2 to process raw data, build ASV table, and perform alpha and beta diversity analysis.
+- **0a_qiime_workflow.sh**: This script uses QIIME2 to process raw data, build ASV table, and perform alpha and beta diversity analysis.
+- **0_data_files**: This directory holds all the output files from the above. Subsequent scripts will load from here to access the original data.
 
-**0b_picrust2_workflow.sh**: This bash script was used to run picrust2 on UGA's high-performance computing cluster, sapelo2.
+# Post-ASV workflow
 
-**0_data_files**: This directory holds all the output files from the above. Subsequent scripts will load from here to access the original data.
+After calling ASVs, all subsequent steps are part of an R workflow. Unless you really want the raw analysis, this is probably the best place to pick up
 
-# Step 1 - Data unification and filtering
+- **0b_RunRScripts.sh**: Wrapper script to run all the R scripts in subsequent steps
 
-**1a_UnifyData.r**: Unify the ASV table, metadata, taxonomy, & phylogenetic tree into a phyloseq object and write out. (Raw, rarefied, and rarefied + yellow stripe filtered)
- - Also makes a heatmap of genotype presence across locations
+## Step 1 - Data unification and filtering
 
-# Step 2 - Diversity Metrics
+This is a preparatory step to get the data combined and ready to use for subsequent analysis. A big part of this is creating RDS (R data structure) files with the ASV table pre-loaded as a Phyloseq object.
 
-**2a_AlphaDiversity.r** - Calculate and plot basic alpha diversity measures
+- **1a_UnifyData.r**: Unify the ASV table, metadata, taxonomy, & phylogenetic tree into a phyloseq object and write out. (Raw, rarefied, and rarefied + yellow stripe filtered)
+    - Also makes a heatmap of genotype presence across locations
+- **1b_PlotFieldLocations.r**: Make a plot of where the field locations are
+- **1c_CalculateOtuTableStats.r**: Calculate basic stats on OTU tables so can easily get them for the manuscript
+ 
+## Step 2 - Diversity Metrics
 
-# Step 3 - TODO
+This step takes the ASV table from Step 1 and performs basic alpha and beta diversity analysis
 
-# TODO - Still need Taxonomy GxE script
+- **2a_AlphaDiversity.r**: Calculate and plot basic alpha diversity measures
+- **2b_BetaDiversity_calc.r**: Calculate beta diversity measures. Can take a while, so put in own script to be able to redo others (e.g., plotting) quickly
+- **2c_BetaDiversity_Significance.r**: Calculate significance of beta diversity with PERMANOVA against location and genotype
+- **2d_BetaDiversity_PCOA.r**: Plot PCoA plots of beta diversity
 
+## Step 3 - GxE analysis
 
-**Explanation for files**
+This step does variance analysis on various metrics to determine the relative importance of genetics, environment, and GxE to each of them.
 
+- **3a_FilterSamplesForGxE.r**: Filter the ASV table down to just the samples to be used for GxE analysis
+- **3b_CalcGxE_AlphaDiversity.r**: Perform GxE variance breakdown for alpha diversity
+- **3c_CalcGxE_BetaDiversity.r**: Perform GxE variance breakdown for alpha diversity
+- **3d_RunPicrust2OnGxEData.sh**: Run PICRUST2 (via a conda environment) to get pathway predictions
+- **3e_CalcGxe_Pathways.r**: Perform GxE variance breakdown for PICRUST2 pathway predictions
+- **3f_CaclGxE_Taxonomy.r**: Perform GxE variance breakdown for bacterial taxonomic levels
+- **3g_PlotGxE.r**: Combine the individual outputs of the above scripts into a single figure for publication
 
-**2019_G2F_metadata_enviromental.tsv**
+## Step 4 - Core Microbiome
 
-Metadata of 2019 G2F samples
+This step determines the core microbiome across samples
 
+- **4a_CoreMicrobiome.r**: Calculate the "core" microbiome
+- **4d_SummarizeCoreTaxa.r**: Make summary tables of the core microbiome
 
-**G2F_metadata_2019_duplicate_pedigree.txt**
+## Step 5 - Association
 
-SampleID of G2F duplicate samples 
+This step associates various metrics with environmental variables to try to determine what could be driving some of the community makeup.
 
-
-
-**aligned-rep-seqs.qza**
-
-representative sequence 
-
-
-**alpha_diversity_metrics.txt**
-
-alpha diversity name for loop operation 
-
-
-**beta_diversity_metrics.txt**
-
-beta diversity name for loop operation 
-
-
-**column_name_list.txt**
-
-Metadata column name 
-
-
-**dada2_table-no-mitochondria-no-chloroplast-blank-filtered-yellow-stripe-duplicate-pedigree.qza**
-
-ASV table after filtering mitochondria, chloroplast, and blank, keeping samples with duplicate 
-
-
-**dada2_table-no-mitochondria-no-chloroplast-blank-filtered.qza**
-
-ASV table after filtering mitochondria, chloroplast, and blank
-
-
-**dada2_table-no-mitochondria-no-chloroplast.qza**
-
-ASV table after filtering mitochondria and chloroplast 
-
-
-**dada2_table.qza**
-
-original ASV table 
-
-
-**path_abun_unstrat_descrip.tsv**
-
-Pathway estimation based on ASV table with only duplicated samples of YS pedigree 
-
-
-
-
-
-
-**yellow_strip_gbs_data_orinigal.tsv**
-
-The file that contains the original yellow stripe species name 
+- **5a_AlphaDiversityAssociation.r**: Test environmental variables against alpha diversity
+- **5b_BetaDiversityAssociation.r**: Test environmental variables against beta diversity
+- **5c_BetaDiversityAssociation_GenotypeLocation.r**: More testing of beta diversity, this time of specific genotypes across locations
+- **5d_PathwayAssociation.r**: Test environmental variables against PICRUST2 predicted pathways
