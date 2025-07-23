@@ -13,7 +13,7 @@ ncores=7  # Parallel processing cores
 conda activate picrust2-2.6.2
 
 # Unzip rep seqs from original DADA2 pipeline
-unzip -p 0_data_files/dada2_rep-seqs.qza 4e5ce913-2a8c-4916-8016-f8ed3b04d2c1/data/dna-sequences.fasta > 3_GxE/3d_rep_seqs.fasta
+unzip -p 0_data_files/dada2_rep-seqs.qza 4e5ce913-2a8c-4916-8016-f8ed3b04d2c1/data/dna-sequences.fasta > $rep_seqs
  
 # Run PICRUST2 Pipeline
 picrust2_pipeline.py -s $rep_seqs -i $abundance_table -o $outdir -p $ncores
