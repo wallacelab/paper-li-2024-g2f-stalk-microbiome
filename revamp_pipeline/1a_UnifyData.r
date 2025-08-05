@@ -11,6 +11,11 @@ yellow_stripes = c("PHW52/PHM49","B73/PHM49","F42/H95","F42/MO17","OH43/B37","PH
                    "LH74/PHN82","PHG39/PHN82","B73/MO17","B73/PHN82","B37/H95","F42/OH43","B37/MO17","B37/OH43","CG119/CG108",
                    "CG44/CGR01","2369/LH123HT")  # "Yellow-stripe" genotypes that are the focus of this study
 duplicates=c("NCH1-1-159") # Samples that have duplicates (=2 samples with same ID); unclear which is correct, so just filter them out
+weather_stats = c("Temperature..C.", "Dew.Point..C.", "Relative.Humidity....", 
+                  "Solar.Radiation..W.m2.", "Rainfall..mm.", "Wind.Speed..m.s.",
+                  "Wind.Direction..degrees.", "Wind.Gust..m.s.", "Soil.Temperature..C.",
+                  "Soil.Moisture...VWC.", "PAR..uM.m2s.")  # Columns with weather info
+
 
 #############
 # Load data
@@ -27,9 +32,10 @@ taxonomy = read.csv("0_data_files/taxonomy.tsv",sep="\t",row.names =1)
 #import phylogenetic tree table
 phy_tree	=	read_tree("0_data_files/tree.nwk")
 
-#import metadata table and convert to matrix 
+#import metadata tables (original, and then the "cleaned" one from G2F reflecting ambiguity in seed substitutions)
 metadata	=	read.table("0_data_files/G2f_2019_sub_corrected_metadata.tsv",sep ="\t",header = 1,row.names=1)
-
+meta.clean = read.csv("0_data_files/g2f_2019_phenotypic_clean_data.csv") %>%
+  select(Field.Location, Plot, Pedigree)
 
 
 #############
@@ -80,14 +86,34 @@ taxonomy <- as.matrix(revised_taxonomy)
 # Fix metadata
 ###############
 
+# Deal with potential seed substitution ambiguity
+metadata$join_key = paste(metadata$location, metadata$plot_number, sep="-") # Our metadata
+meta.clean$join_key = paste(meta.clean$Field.Location, meta.clean$Plot, sep="-") # Final G2F metadata
+## Confirm all match
+if(!any(metadata$join_key %in% meta.clean$join_key)){
+  stop("Some plots are not in the G2F cleaned metadata file")
+}
+## Join by location and plot
+tojoin = meta.clean %>% 
+  select(join_key, Pedigree) %>%
+  rename("clean_pedigree" = Pedigree)
+metadata = metadata %>%
+  rownames_to_column("row_names") %>%
+  left_join(tojoin, by="join_key") %>%  # Destroys row names, so flanking code preserves
+  column_to_rownames("row_names")
+## Check how many pedigrees don't match
+mismatches = which(metadata$Corrected_pedigree != metadata$clean_pedigree)
+cat(length(mismatches), "Pedigrees don't match and will be set to 'unknown'")
+mismatch.out = metadata[mismatches,] %>%
+  select(location, pedigree, rep_number, plot_number, Corrected_pedigree, Grower, join_key, clean_pedigree)
+metadata$Corrected_pedigree[mismatches] = paste("Unknown", 1:length(mismatches), sep="") # Make each unique so later steps don't try to treat the same
+## Write out mismatches so can manually check
+write.csv(mismatch.out, file="1_parsed_files/1a_pedigree_mismatches.csv", row.names=FALSE)
+
 #merge OH43/B37 and B37/OH43, since are basically the same hybrid. (We're not doing maternal effects in this study)
 metadata$Corrected_pedigree <- gsub(".*^OH43/B37","B37/OH43",metadata$Corrected_pedigree)
 
-# Remove weather metadata; eventually determined there were too many issues
-weather_stats = c("Temperature..C.", "Dew.Point..C.", "Relative.Humidity....", 
-                  "Solar.Radiation..W.m2.", "Rainfall..mm.", "Wind.Speed..m.s.",
-                  "Wind.Direction..degrees.", "Wind.Gust..m.s.", "Soil.Temperature..C.",
-                  "Soil.Moisture...VWC.", "PAR..uM.m2s.")
+# Remove weather metadata; eventually determined there were too many issues with it
 metadata = subset(metadata, select = ! names(metadata) %in% weather_stats)
 
 ###############
