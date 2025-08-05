@@ -103,7 +103,7 @@ metadata = metadata %>%
   column_to_rownames("row_names")
 ## Check how many pedigrees don't match
 mismatches = which(metadata$Corrected_pedigree != metadata$clean_pedigree)
-cat(length(mismatches), "Pedigrees don't match and will be set to 'unknown'")
+cat(length(mismatches), "Pedigrees don't match and will be set to 'unknown'\n")
 mismatch.out = metadata[mismatches,] %>%
   select(location, pedigree, rep_number, plot_number, Corrected_pedigree, Grower, join_key, clean_pedigree)
 metadata$Corrected_pedigree[mismatches] = paste("Unknown", 1:length(mismatches), sep="") # Make each unique so later steps don't try to treat the same
