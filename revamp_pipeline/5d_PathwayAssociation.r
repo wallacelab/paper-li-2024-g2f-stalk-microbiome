@@ -9,14 +9,18 @@ library(readr)
 library(tidyverse)
 library(phyloseq)
 
-# TODO: In preproces_pathway_description(), it says 80% prevalence filter but check is 70. 
-#       Double-check math and convert to a parameter
 # TODO: Environmental variables (inc. 2 to focus on) are hardcoded. Able to do that more programmatically?
 
 # File locations
-pathway_file = "0_data_files/path_abun_unstrat_descrip.tsv"
+pathway_file="0_data_files/path_abun_unstrat_descrip.tsv"
+#pathway_file="3_GxE/3d_picrust2_predictions/pathways_out/path_abun_unstrat_descrip.tsv.gz"
 soil_file = "0_data_files/g2f_2019_soil_data.csv"
-#weather_file = "0_data_files//G2F_2019_weather_average_and_sum.tsv"
+max_sample_missing=0.2 # Fraction of pathway counts with 0s (=missing) in more than this many samples will be removed
+
+# Environmental factors to focus on
+environmental_factors <- c("X1.1.Soil.pH", "WDRF.Buffer.pH", "X1.1.S.Salts.mmho.cm", "Organic.Matter.LOI..", "Nitrate.N.ppm.N", "lbs.N.A",                   
+                           "Potassium.ppm.K", "Sulfate.S.ppm.S", "Calcium.ppm.Ca", "Magnesium.ppm.Mg", "CEC.Sum.of.Cations.me.100g")
+target_factors = c( "Potassium.ppm.K")
 
 # Load metadata
 metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds") %>% 
@@ -24,10 +28,6 @@ metadata = readRDS("1_parsed_files/1a_asv_table_no_taxa_from_blanks.phyloseq.rds
   data.frame() %>%
   rownames_to_column("SampleID")
 
-# Environmental factors to focus on
-environmental_factors <- c("X1.1.Soil.pH", "WDRF.Buffer.pH", "X1.1.S.Salts.mmho.cm", "Organic.Matter.LOI..", "Nitrate.N.ppm.N", "lbs.N.A",                   
-                           "Potassium.ppm.K", "Sulfate.S.ppm.S", "Calcium.ppm.Ca", "Magnesium.ppm.Mg", "CEC.Sum.of.Cations.me.100g")
-target_factors = c( "Potassium.ppm.K")
 
 #################
 # Functions
@@ -35,10 +35,13 @@ target_factors = c( "Potassium.ppm.K")
 
 # Function to preprocess the pathway description data
 preprocess_pathway_description <- function(filepath) {
-  pathway_description <- read.table(filepath, sep = "\t", header = TRUE, check.names = TRUE, row.names = 1)
+  pathway_description <- read.delim(filepath) %>%
+    select(-description) %>%
+    column_to_rownames("pathway")
   colnames(pathway_description) <- gsub("\\.", "-", colnames(pathway_description))
-  pathway_description$description <- NULL  # Remove description to avoid console crash
-  pathway_description <- pathway_description[rowSums(pathway_description == 0) <= 70, ]  # Keep pathways with >= 80% prevalence
+  # Remove those with too high fraction missing
+  fraction_missing = rowSums(pathway_description == 0)/ncol(pathway_description)
+  pathway_description <- pathway_description[fraction_missing <= max_sample_missing, ]
   return(pathway_description)
 }
 
@@ -48,20 +51,20 @@ calculate_average_pathway_by_location <- function(pathway_description, metadata)
   input_pathway_table$SampleID <- rownames(input_pathway_table)
   
   #metadata$SampleID <- gsub("\\.", "-", rownames(metadata)) # Not needed
-  merged_data <- inner_join(input_pathway_table, metadata, by = "SampleID")
+  metadata.trim = metadata[,c("SampleID", "location")]
+  merged_data <- inner_join(metadata.trim, input_pathway_table, by = "SampleID") %>%
+    select(-SampleID)
   
   #average_pathway <- aggregate(. ~ location, data = merged_data, FUN = mean)
   
   #average the pathway based on location 
-  average_pathway_location <- aggregate(x= merged_data[,1:280],     
-                                        
-                                        # Specify group indicator
-                                        by = list(merged_data$location),      
-                                        
-                                        # Specify function (i.e. mean)
-                                        FUN = mean)
-  
-  colnames(average_pathway_location)[1] <- "location"
+  average_pathway_location <- merged_data %>%
+    group_by(location) %>%
+    summarize_all(mean)
+      # aggregate(x= merged_data,     
+      #                                   by = list(merged_data$location),      
+      #                                   FUN = mean)
+
   return(average_pathway_location)
 }
 
@@ -96,19 +99,24 @@ perform_maaslin2_analysis <- function(pathway_data, metadata, environmental_fact
   for (factor in environmental_factors) {
     save_path <- paste0("5_Associations/5d_pathways/lm_ec_pathway_Maaslin2_no_transform_", factor, "_test")
     fit_data <- Maaslin2(input_data = pathway_data, input_metadata = metadata, output = save_path,
-                         transform = "None", fixed_effects = factor, min_prevalence = 0.9, max_significance = 0.1,
-                         standardize = TRUE)
+                         transform = "None", fixed_effects = factor, min_prevalence = 0.001, max_significance = 1,
+                         standardize = TRUE, plot_scatter=FALSE, plot_heatmap=FALSE)
     
-    result_path <- file.path(save_path, "significant_results.tsv")
-    if (file.exists(result_path)){
-      temp_results <- read.table(result_path, sep = "\t", header = TRUE) %>% 
-        mutate(metadata = as.character(metadata), feature = as.character(feature), value = as.character(value))
-      significant_results <- bind_rows(significant_results, temp_results)
-    }
+    # result_path <- file.path(save_path, "significant_results.tsv")
+    # if (file.exists(result_path)){
+    #   temp_results <- read.table(result_path, sep = "\t", header = TRUE) %>% 
+    #     mutate(metadata = as.character(metadata), feature = as.character(feature), value = as.character(value))
+    #   significant_results <- bind_rows(significant_results, temp_results)
+    # }
   }
   
-  significant_results$feature <- gsub("\\.", "-", significant_results$feature)
-  return(significant_results)
+  result.files = list.files("5_Associations/5d_pathways/", recursive=TRUE, 
+                            pattern="all_results.tsv", full.names=TRUE)
+  results = lapply(result.files, read.delim) %>%
+    bind_rows()
+  return(results)
+  # significant_results$feature <- gsub("\\.", "-", significant_results$feature)
+  # return(significant_results)
 }
 
 ##############################################################################
@@ -151,14 +159,14 @@ rownames(average_pathway_group) <- average_pathway_location_metadata_2$location
 rownames(pathway_location_metadata) <- average_pathway_location_metadata_2$location
 
 #run masslin2 analysis
-significant_results <- perform_maaslin2_analysis(average_pathway_group,pathway_location_metadata, environmental_factors)
-significant_result_0.05 <- subset(significant_results,qval <=0.05)
-significant_result_0.01  <- subset(significant_results,qval <=0.01)
+results <- perform_maaslin2_analysis(average_pathway_group,pathway_location_metadata, environmental_factors)
+significant_result_0.05 <- subset(results,qval <=0.05)
+significant_result_0.01  <- subset(results,qval <=0.01)
 
 
 # Read and preprocess the pathway description
-pathway_description <- read.table(pathway_file, sep = "\t", header = TRUE, check.names = TRUE)
-pathway_description <- pathway_description[, c("pathway", "description")]
+pathway_description <- read.delim(pathway_file) %>%
+  select(pathway, description)
 
 # Filter the significant results to include only specific values and add pathway descriptions
 significant_result_0.05_annotation <- significant_result_0.05 %>%

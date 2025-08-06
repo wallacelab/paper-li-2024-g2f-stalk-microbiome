@@ -1,141 +1,141 @@
 Factor	Pathway	association	Pathway_ID
-Potassium	NAD salvage pathway II	negative	NAD-BIOSYNTHESIS-II
-Potassium	superpathway of phospholipid biosynthesis I (bacteria)	positive	PHOSLIPSYN-PWY
-Potassium	tRNA processing	negative	PWY0-1479
-Potassium	phosphatidylglycerol biosynthesis I (plastidic)	positive	PWY4FS-7
-Potassium	phosphatidylglycerol biosynthesis II (non-plastidic)	positive	PWY4FS-8
-Potassium	L-arginine biosynthesis II (acetyl cycle)	positive	ARGSYNBSUB-PWY
-Potassium	chorismate biosynthesis I	positive	ARO-PWY
-Potassium	coenzyme A biosynthesis I	positive	COA-PWY
-Potassium	superpathway of aromatic amino acid biosynthesis	positive	COMPLETE-ARO-PWY
-Potassium	dTDP-L-rhamnose biosynthesis I	positive	DTDPRHAMSYN-PWY
-Potassium	superpathway of hexuronide and hexuronate degradation	negative	GALACT-GLUCUROCAT-PWY
-Potassium	superpathway of &beta;-D-glucuronide and D-glucuronate degradation	negative	GLUCUROCAT-PWY
-Potassium	L-ornithine biosynthesis	positive	GLUTORN-PWY
-Potassium	L-histidine biosynthesis	positive	HISTSYN-PWY
-Potassium	O-antigen building blocks biosynthesis (E. coli)	positive	OANTIGEN-PWY
-Potassium	peptidoglycan biosynthesis I (meso-diaminopimelate containing)	positive	PEPTIDOGLYCANSYN-PWY
-Potassium	polyisoprenoid biosynthesis (E. coli)	positive	POLYISOPRENSYN-PWY
-Potassium	aerobic respiration I (cytochrome c)	positive	PWY-3781
-Potassium	GDP-mannose biosynthesis	positive	PWY-5659
-Potassium	allantoin degradation to glyoxylate III	negative	PWY-5705
-Potassium	superpathway of guanosine nucleotides de novo biosynthesis II	positive	PWY-6125
-Potassium	superpathway of adenosine nucleotides de novo biosynthesis II	positive	PWY-6126
-Potassium	chorismate biosynthesis from 3-dehydroquinate	positive	PWY-6163
-Potassium	UDP-N-acetylmuramoyl-pentapeptide biosynthesis I (meso-diaminopimelate containing)	positive	PWY-6387
-Potassium	superpathway of L-phenylalanine biosynthesis	negative	PWY-6628
-Potassium	superpathway of L-tyrosine biosynthesis	negative	PWY-6630
-Potassium	TCA cycle V (2-oxoglutarate:ferredoxin oxidoreductase)	positive	PWY-6969
-Potassium	pyrimidine deoxyribonucleotide phosphorylation	positive	PWY-7197
-Potassium	adenosine ribonucleotides de novo biosynthesis	positive	PWY-7219
-Potassium	adenosine deoxyribonucleotides de novo biosynthesis II	positive	PWY-7220
-Potassium	guanosine deoxyribonucleotides de novo biosynthesis II	positive	PWY-7222
-Potassium	superpathway of guanosine nucleotides de novo biosynthesis I	positive	PWY-7228
-Potassium	myo-, chiro- and scillo-inositol degradation	negative	PWY-7237
-Potassium	D-fructuronate degradation	negative	PWY-7242
-Potassium		positive	PWY-841
-Potassium	superpathway of L-alanine biosynthesis	negative	PWY0-1061
-Potassium	anhydromuropeptides recycling	negative	PWY0-1261
-Potassium	NAD biosynthesis I (from aspartate)	positive	PYRIDNUCSYN-PWY
-Potassium	flavin biosynthesis I (bacteria and plants)	positive	RIBOSYN2-PWY
-Potassium	superpathway of L-serine and glycine biosynthesis I	positive	SER-GLYSYN-PWY
+Potassium	NA	negative	NAD.BIOSYNTHESIS.II
+Potassium	NA	positive	PHOSLIPSYN.PWY
+Potassium	NA	negative	PWY0.1479
+Potassium	NA	positive	PWY4FS.7
+Potassium	NA	positive	PWY4FS.8
+Potassium	NA	positive	ARGSYNBSUB.PWY
+Potassium	NA	positive	ARO.PWY
+Potassium	NA	positive	COA.PWY
+Potassium	NA	positive	COMPLETE.ARO.PWY
+Potassium	NA	positive	DTDPRHAMSYN.PWY
+Potassium	NA	negative	GALACT.GLUCUROCAT.PWY
+Potassium	NA	negative	GLUCUROCAT.PWY
+Potassium	NA	positive	GLUTORN.PWY
+Potassium	NA	positive	HISTSYN.PWY
+Potassium	NA	positive	OANTIGEN.PWY
+Potassium	NA	positive	PEPTIDOGLYCANSYN.PWY
+Potassium	NA	positive	POLYISOPRENSYN.PWY
+Potassium	NA	positive	PWY.3781
+Potassium	NA	positive	PWY.5659
+Potassium	NA	negative	PWY.5705
+Potassium	NA	positive	PWY.6125
+Potassium	NA	positive	PWY.6126
+Potassium	NA	positive	PWY.6163
+Potassium	NA	positive	PWY.6387
+Potassium	NA	negative	PWY.6628
+Potassium	NA	negative	PWY.6630
+Potassium	NA	positive	PWY.6969
+Potassium	NA	positive	PWY.7197
+Potassium	NA	positive	PWY.7219
+Potassium	NA	positive	PWY.7220
+Potassium	NA	positive	PWY.7222
+Potassium	NA	positive	PWY.7228
+Potassium	NA	negative	PWY.7237
+Potassium	NA	negative	PWY.7242
+Potassium	NA	positive	PWY.841
+Potassium	NA	negative	PWY0.1061
+Potassium	NA	negative	PWY0.1261
+Potassium	NA	positive	PYRIDNUCSYN.PWY
+Potassium	NA	positive	RIBOSYN2.PWY
+Potassium	NA	positive	SER.GLYSYN.PWY
 Potassium	TCA cycle I (prokaryotic)	positive	TCA
-Potassium	superpathway of thiamin diphosphate biosynthesis I	negative	THISYN-PWY
-Potassium	tRNA charging	positive	TRNA-CHARGING-PWY
-Potassium	superpathway of adenosine nucleotides de novo biosynthesis I	positive	PWY-7229
-Potassium	superpathway of pyrimidine ribonucleotides de novo biosynthesis	positive	PWY0-162
-Potassium	fatty acid elongation -- saturated	positive	FASYN-ELONG-PWY
-Potassium	1,4-dihydroxy-6-naphthoate biosynthesis II	positive	PWY-7371
-Potassium	glycolysis III (from glucose)	positive	ANAGLYCOLYSIS-PWY
-Potassium	urea cycle	positive	PWY-4984
-Potassium	L-isoleucine biosynthesis III	positive	PWY-5103
-Potassium	guanosine ribonucleotides de novo biosynthesis	positive	PWY-7221
-Potassium	UDP-N-acetyl-D-glucosamine biosynthesis I	positive	UDPNAGSYN-PWY
-Potassium	UMP biosynthesis	positive	PWY-5686
-Potassium	inosine-5-phosphate biosynthesis I	positive	PWY-6123
-Potassium	tetrapyrrole biosynthesis I (from glutamate)	positive	PWY-5188
-Potassium	superpathway of UDP-glucose-derived O-antigen building blocks biosynthesis	negative	PWY-7328
-Potassium	superpathway of branched amino acid biosynthesis	positive	BRANCHED-CHAIN-AA-SYN-PWY
-Potassium	CDP-diacylglycerol biosynthesis I	positive	PWY-5667
-Potassium	superpathway of menaquinol-8 biosynthesis II	positive	PWY-6263
-Potassium	CDP-diacylglycerol biosynthesis II	positive	PWY0-1319
-Potassium	L-tryptophan biosynthesis	positive	TRPSYN-PWY
-Potassium	L-isoleucine biosynthesis IV	positive	PWY-5104
-Potassium	S-adenosyl-L-methionine cycle I	negative	PWY-6151
-Potassium	4-deoxy-L-threo-hex-4-enopyranuronate degradation	negative	PWY-6507
-Potassium	superpathway of pyrimidine nucleobases salvage	positive	PWY-7208
-Potassium	incomplete reductive TCA cycle	positive	P42-PWY
-Potassium	peptidoglycan biosynthesis III (mycobacteria)	positive	PWY-6385
-Potassium	thiazole biosynthesis I (E. coli)	negative	PWY-6892
-Potassium	glyoxylate cycle	negative	GLYOXYLATE-BYPASS
-Potassium	L-histidine degradation II	negative	PWY-5028
-Potassium	GDP-D-glycero-&alpha;-D-manno-heptose biosynthesis	positive	PWY-6478
-Potassium	adenine and adenosine salvage III	positive	PWY-6609
-Potassium	L-lysine biosynthesis III	positive	PWY-2942
-Potassium	queuosine biosynthesis	positive	PWY-6700
-Potassium	L-tyrosine degradation I	negative	TYRFUMCAT-PWY
-Potassium	D-galacturonate degradation I	negative	GALACTUROCAT-PWY
-Potassium	superpathway of pyrimidine ribonucleosides salvage	positive	PWY-7196
-Potassium	myo-inositol degradation I	negative	P562-PWY
-Potassium	sucrose degradation IV (sucrose phosphorylase)	negative	PWY-5384
+Potassium	NA	negative	THISYN.PWY
+Potassium	NA	positive	TRNA.CHARGING.PWY
+Potassium	NA	positive	PWY.7229
+Potassium	NA	positive	PWY0.162
+Potassium	NA	positive	FASYN.ELONG.PWY
+Potassium	NA	positive	PWY.7371
+Potassium	NA	positive	ANAGLYCOLYSIS.PWY
+Potassium	NA	positive	PWY.4984
+Potassium	NA	positive	PWY.5103
+Potassium	NA	positive	PWY.7221
+Potassium	NA	positive	UDPNAGSYN.PWY
+Potassium	NA	positive	PWY.5686
+Potassium	NA	positive	PWY.6123
+Potassium	NA	positive	PWY.5188
+Potassium	NA	negative	PWY.7328
+Potassium	NA	positive	BRANCHED.CHAIN.AA.SYN.PWY
+Potassium	NA	positive	PWY.5667
+Potassium	NA	positive	PWY.6263
+Potassium	NA	positive	PWY0.1319
+Potassium	NA	positive	TRPSYN.PWY
+Potassium	NA	positive	PWY.5104
+Potassium	NA	negative	PWY.6151
+Potassium	NA	negative	PWY.6507
+Potassium	NA	positive	PWY.7208
+Potassium	NA	positive	P42.PWY
+Potassium	NA	positive	PWY.6385
+Potassium	NA	negative	PWY.6892
+Potassium	NA	negative	GLYOXYLATE.BYPASS
+Potassium	NA	negative	PWY.5028
+Potassium	NA	positive	PWY.6478
+Potassium	NA	positive	PWY.6609
+Potassium	NA	positive	PWY.2942
+Potassium	NA	positive	PWY.6700
+Potassium	NA	negative	TYRFUMCAT.PWY
+Potassium	NA	negative	GALACTUROCAT.PWY
+Potassium	NA	positive	PWY.7196
+Potassium	NA	negative	P562.PWY
+Potassium	NA	negative	PWY.5384
 Potassium	glycolysis I (from glucose 6-phosphate)	positive	GLYCOLYSIS
-Potassium	lipid IVA biosynthesis	negative	NAGLIPASYN-PWY
-Potassium	superpathway of L-aspartate and L-asparagine biosynthesis	negative	ASPASN-PWY
-Potassium	colanic acid building blocks biosynthesis	positive	COLANSYN-PWY
-Potassium	L-arginine biosynthesis IV (archaebacteria)	positive	PWY-7400
-Potassium	L-arginine biosynthesis I (via L-ornithine)	positive	ARGSYN-PWY
-Potassium	mixed acid fermentation	negative	FERMENTATION-PWY
-Potassium	superpathway of L-isoleucine biosynthesis I	positive	PWY-3001
-Potassium	cis-vaccenate biosynthesis	positive	PWY-5973
-Potassium	ubiquinol-7 biosynthesis (prokaryotic)	negative	PWY-5855
-Potassium	ubiquinol-9 biosynthesis (prokaryotic)	negative	PWY-5856
-Potassium	ubiquinol-10 biosynthesis (prokaryotic)	negative	PWY-5857
-Potassium	sucrose degradation III (sucrose invertase)	negative	PWY-621
-Potassium	superpathway of tetrahydrofolate biosynthesis	negative	PWY-6612
-Potassium	ubiquinol-8 biosynthesis (prokaryotic)	negative	PWY-6708
-Potassium	pentose phosphate pathway (non-oxidative branch)	positive	NONOXIPENT-PWY
-Potassium	gondoate biosynthesis (anaerobic)	positive	PWY-7663
-Potassium	ADP-L-glycero-&beta;-D-manno-heptose biosynthesis	positive	PWY0-1241
-Potassium	dTDP-N-acetylthomosamine biosynthesis	negative	PWY-7315
-Potassium	L-lysine biosynthesis VI	positive	PWY-5097
-Potassium	tetrapyrrole biosynthesis II (from glycine)	positive	PWY-5189
-Potassium	2-methylcitrate cycle II	negative	PWY-5747
-Potassium	pyruvate fermentation to propanoate I	positive	P108-PWY
-Potassium	superpathway of GDP-mannose-derived O-antigen building blocks biosynthesis	positive	PWY-7323
-Potassium	superpathway of ubiquinol-8 biosynthesis (prokaryotic)	negative	UBISYN-PWY
-Potassium	phosphopantothenate biosynthesis I	negative	PANTO-PWY
-Potassium	5-aminoimidazole ribonucleotide biosynthesis II	positive	PWY-6122
-Potassium	superpathway of 5-aminoimidazole ribonucleotide biosynthesis	positive	PWY-6277
-Potassium	superpathway of tetrahydrofolate biosynthesis and salvage	negative	FOLSYN-PWY
-Potassium	reductive TCA cycle I	positive	P23-PWY
-Potassium	adenosylcobalamin biosynthesis from cobyrinate a,c-diamide I	negative	PWY-5509
-Potassium	adenosylcobalamin salvage from cobinamide II	negative	PWY-6269
-Potassium	2-methylcitrate cycle I	negative	PWY0-42
-Potassium	superpathway of glyoxylate bypass and TCA	negative	TCA-GLYOX-BYPASS
-Potassium	glucose and glucose-1-phosphate degradation	negative	GLUCOSE1PMETAB-PWY
-Potassium	NA	negative	X1CMET2-PWY
-Potassium	glycogen biosynthesis I (from ADP-D-Glucose)	positive	GLYCOGENSYNTH-PWY
-Potassium	superpathway of L-threonine biosynthesis	positive	THRESYN-PWY
-Potassium	TCA cycle VII (acetate-producers)	negative	PWY-7254
-Potassium	preQ0 biosynthesis	positive	PWY-6703
-Potassium	superpathway of pyrimidine deoxyribonucleoside salvage	positive	PWY-7200
-Potassium	superpathway of L-methionine biosynthesis (by sulfhydrylation)	negative	PWY-5345
-Potassium	6-hydroxymethyl-dihydropterin diphosphate biosynthesis I	negative	PWY-6147
-Potassium	norspermidine biosynthesis	negative	PWY-6562
-Potassium	6-hydroxymethyl-dihydropterin diphosphate biosynthesis III (Chlamydia)	negative	PWY-7539
-Potassium	superpathway of glycolysis, pyruvate dehydrogenase, TCA, and glyoxylate bypass	negative	GLYCOLYSIS-TCA-GLYOX-BYPASS
-Potassium	biotin biosynthesis I	negative	BIOTIN-BIOSYNTHESIS-PWY
-Potassium	5-aminoimidazole ribonucleotide biosynthesis I	positive	PWY-6121
-Potassium	superpathway of 2,3-butanediol biosynthesis	negative	PWY-6396
-Potassium	catechol degradation to &beta;-ketoadipate	negative	CATECHOL-ORTHO-CLEAVAGE-PWY
-Potassium	pentose phosphate pathway	positive	PENTOSE-P-PWY
-Potassium	gallate degradation I	negative	GALLATE-DEGRADATION-II-PWY
-Potassium	8-amino-7-oxononanoate biosynthesis I	negative	PWY-6519
-Potassium	adenosylcobalamin salvage from cobinamide I	negative	COBALSYN-PWY
-Potassium	methylgallate degradation	negative	METHYLGALLATE-DEGRADATION-PWY
-Potassium	ketogluconate metabolism	negative	KETOGLUCONMET-PWY
-Potassium	gallate degradation II	negative	GALLATE-DEGRADATION-I-PWY
-Potassium	superpathway of pyrimidine deoxyribonucleotides de novo biosynthesis (E. coli)	positive	PWY0-166
-Potassium	pyruvate fermentation to acetone	positive	PWY-6588
-Potassium	Calvin-Benson-Bassham cycle	positive	CALVIN-PWY
-Potassium	purine nucleotides degradation II (aerobic)	negative	PWY-6353
+Potassium	NA	negative	NAGLIPASYN.PWY
+Potassium	NA	negative	ASPASN.PWY
+Potassium	NA	positive	COLANSYN.PWY
+Potassium	NA	positive	PWY.7400
+Potassium	NA	positive	ARGSYN.PWY
+Potassium	NA	negative	FERMENTATION.PWY
+Potassium	NA	positive	PWY.3001
+Potassium	NA	positive	PWY.5973
+Potassium	NA	negative	PWY.5855
+Potassium	NA	negative	PWY.5856
+Potassium	NA	negative	PWY.5857
+Potassium	NA	negative	PWY.621
+Potassium	NA	negative	PWY.6612
+Potassium	NA	negative	PWY.6708
+Potassium	NA	positive	NONOXIPENT.PWY
+Potassium	NA	positive	PWY.7663
+Potassium	NA	positive	PWY0.1241
+Potassium	NA	negative	PWY.7315
+Potassium	NA	positive	PWY.5097
+Potassium	NA	positive	PWY.5189
+Potassium	NA	negative	PWY.5747
+Potassium	NA	positive	P108.PWY
+Potassium	NA	positive	PWY.7323
+Potassium	NA	negative	UBISYN.PWY
+Potassium	NA	negative	PANTO.PWY
+Potassium	NA	positive	PWY.6122
+Potassium	NA	positive	PWY.6277
+Potassium	NA	negative	FOLSYN.PWY
+Potassium	NA	positive	P23.PWY
+Potassium	NA	negative	PWY.5509
+Potassium	NA	negative	PWY.6269
+Potassium	NA	negative	PWY0.42
+Potassium	NA	negative	TCA.GLYOX.BYPASS
+Potassium	NA	negative	GLUCOSE1PMETAB.PWY
+Potassium	NA	negative	X1CMET2.PWY
+Potassium	NA	positive	GLYCOGENSYNTH.PWY
+Potassium	NA	positive	THRESYN.PWY
+Potassium	NA	negative	PWY.7254
+Potassium	NA	positive	PWY.6703
+Potassium	NA	positive	PWY.7200
+Potassium	NA	negative	PWY.5345
+Potassium	NA	negative	PWY.6147
+Potassium	NA	negative	PWY.6562
+Potassium	NA	negative	PWY.7539
+Potassium	NA	negative	GLYCOLYSIS.TCA.GLYOX.BYPASS
+Potassium	NA	negative	BIOTIN.BIOSYNTHESIS.PWY
+Potassium	NA	positive	PWY.6121
+Potassium	NA	negative	PWY.6396
+Potassium	NA	negative	CATECHOL.ORTHO.CLEAVAGE.PWY
+Potassium	NA	positive	PENTOSE.P.PWY
+Potassium	NA	negative	GALLATE.DEGRADATION.II.PWY
+Potassium	NA	negative	PWY.6519
+Potassium	NA	negative	COBALSYN.PWY
+Potassium	NA	negative	METHYLGALLATE.DEGRADATION.PWY
+Potassium	NA	negative	KETOGLUCONMET.PWY
+Potassium	NA	negative	GALLATE.DEGRADATION.I.PWY
+Potassium	NA	positive	PWY0.166
+Potassium	NA	positive	PWY.6588
+Potassium	NA	positive	CALVIN.PWY
+Potassium	NA	negative	PWY.6353

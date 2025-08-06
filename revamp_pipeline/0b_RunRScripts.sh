@@ -16,29 +16,31 @@ set -e
 # # Basic data unification and cleaning
 # Rscript 1a_UnifyData.r
 # Rscript 1b_PlotFieldLocations.r
-# 
+# Rscript 1c_CalculateOtuTableStats.r > 1_parsed_files/1c_table_stats.txt
+
 # # Alpha and beta diversity
 # Rscript 2a_AlphaDiversity.r
 # Rscript 2b_BetaDiversity_calc.r
 # Rscript 2c_BetaDiversity_Significance.r
 # Rscript 2d_BetaDiversity_PCOA.r
-# 
+
 # # GxE Breakdown
 # Rscript 3a_FilterSamplesForGxE.r
 # Rscript 3b_CalcGxE_AlphaDiversity.r
 # Rscript 3c_CalcGxE_BetaDiversity.r
-bash 3d_RunPicrust2OnGxEData.sh
-Rscript 3e_CalcGxe_Pathways.r
-Rscript 3f_CaclGxE_Taxonomy.r
-Rscript 3g_PlotGxE.r
+# bash 3d_RunPicrust2OnGxEData.sh  # Note: PICRUST2 will not run if output directory already exists
+# Rscript 3e_CalcGxe_Pathways.r
+# Rscript 3f_CaclGxE_Taxonomy.r
+# Rscript 3g_PlotGxE.r
+# Rscript 3h_TestTaxonomyLevelSignificance.r 
 
-# Core microbiome
-Rscript 4a_CoreMicrobiome.r
-Rscript 4d_SummarizeCoreTaxa.r
+# # Core microbiome
+# Rscript 4a_CoreMicrobiome.r
+# Rscript 4d_SummarizeCoreTaxa.r
 
 # Environmental associations
 Rscript 5a_AlphaDiversityAssociation.r
 Rscript 5b_BetaDiversityAssociation.r
 Rscript 5c_BetaDiversityAssociation_GenotypeLocation.r
-Rscript 5d_PathwayAssociation.r
+Rscript 5d_PathwayAssociation.r  # TODO - COnfirm update to de novo calculation
 
