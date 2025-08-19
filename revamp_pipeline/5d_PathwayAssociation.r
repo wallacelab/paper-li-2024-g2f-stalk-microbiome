@@ -12,8 +12,8 @@ library(phyloseq)
 # TODO: Environmental variables (inc. 2 to focus on) are hardcoded. Able to do that more programmatically?
 
 # File locations
-pathway_file="0_data_files/path_abun_unstrat_descrip.tsv"
-#pathway_file="3_GxE/3d_picrust2_predictions/pathways_out/path_abun_unstrat_descrip.tsv.gz"
+#pathway_file="0_data_files/path_abun_unstrat_descrip.tsv" # Old pathway file; not rarefied before running
+pathway_file="3_GxE/3d_picrust2_predictions/pathways_out/path_abun_unstrat_descrip.tsv.gz"
 soil_file = "0_data_files/g2f_2019_soil_data.csv"
 max_sample_missing=0.2 # Fraction of pathway counts with 0s (=missing) in more than this many samples will be removed
 
