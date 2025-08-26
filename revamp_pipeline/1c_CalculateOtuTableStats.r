@@ -20,10 +20,15 @@ stats=function(mydata, label="UNKNOWN"){
   cat("\t", median(sample_sums(mydata)), "median read count per sample\n")
   
   # Locations and genotypes
+  genocounts=sample_data(mydata)$Corrected_pedigree %>% table()
+  genocounts = genocounts[genocounts>=10]
   cat("\t", length(unique(sample_data(mydata)$Corrected_pedigree) 
                    %>% na.omit()), "genotypes\n")
+  cat("\t\t", length(genocounts), "of which have at least 10 instances\n")
   cat("\t", length(unique(sample_data(mydata)$location)
                    %>% na.omit()), "locations\n")
+  
+  
 }
 
 stats(initial, "Initial")

@@ -185,7 +185,7 @@ pubplot = ggplot(pubdata) +
             color="black", vjust=2, hjust=-0.1) +
   labs(x="Difference in Environmental Factors", y="Distance (Weighted Unifrac)")
 
-ggsave(pubplot, file="5_Associations/5b_mantel_tests.pub.png", width=8, height=3)
+ggsave(pubplot, file="5_Associations/5b_mantel_tests.pub.png", width=4, height=3)
 
 
 
