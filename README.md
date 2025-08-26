@@ -46,6 +46,7 @@ This step does variance analysis on various metrics to determine the relative im
 - **3e_CalcGxe_Pathways.r**: Perform GxE variance breakdown for PICRUST2 pathway predictions
 - **3f_CaclGxE_Taxonomy.r**: Perform GxE variance breakdown for bacterial taxonomic levels
 - **3g_PlotGxE.r**: Combine the individual outputs of the above scripts into a single figure for publication
+- **3h_TestTaxonomyLevelSignificance.r**: A mostly deprecated script to test statistical associations with various taxa levels.
 
 ## Step 4 - Core Microbiome
 
@@ -62,3 +63,5 @@ This step associates various metrics with environmental variables to try to dete
 - **5b_BetaDiversityAssociation.r**: Test environmental variables against beta diversity
 - **5c_BetaDiversityAssociation_GenotypeLocation.r**: More testing of beta diversity, this time of specific genotypes across locations
 - **5d_PathwayAssociation.r**: Test environmental variables against PICRUST2 predicted pathways
+
+
