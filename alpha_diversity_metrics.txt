@@ -1,4 +1,0 @@
-faith_pd_vector
-evenness_vector 
-shannon_vector 
-observed_features_vector

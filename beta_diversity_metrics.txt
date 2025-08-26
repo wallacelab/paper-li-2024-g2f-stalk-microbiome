@@ -1,3 +1,0 @@
-bray_curtis_distance_matrix
-weighted_unifrac_distance_matrix
-unweighted_unifrac_distance_matrix
