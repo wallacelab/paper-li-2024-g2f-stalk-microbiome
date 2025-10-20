@@ -26,6 +26,7 @@ Rscript 2d_BetaDiversity_PCOA.r
 
 # GxE Breakdown
 Rscript 3a_FilterSamplesForGxE.r
+Rscript 3a_GetUpdatedTableStats.r > 3_GxE/3a_table_stats.txt
 Rscript 3b_CalcGxE_AlphaDiversity.r
 Rscript 3c_CalcGxE_BetaDiversity.r
 bash 3d_RunPicrust2OnGxEData.sh  # Note: PICRUST2 will not run if output directory already exists
