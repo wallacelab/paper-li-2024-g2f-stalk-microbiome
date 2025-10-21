@@ -1,0 +1,16 @@
+"Location","City","Latitude","Longitude","Initial_Samples","Rarefied_Samples","GxE_Subset_Samples"
+"DEH1","Georgetown",38.6698,-75.4341,71,54,0
+"GAH2","Watkinsville",33.721111,-83.307778,49,45,24
+"IAH2","Carroll",42.06453313,-94.72084876,38,36,34
+"IAH4","Ames",42.03217123,-93.79508048,65,60,60
+"INH1","West Lafayette",40.476661,-87.000529,27,22,12
+"MIH1","East Lansing",42.707672,-84.471602,22,13,0
+"MNH1","Waseca",44.066148,-93.523748,65,65,58
+"MOH1","Columbia",38.89504,-92.20918,32,28,26
+"NCH1","Clayton",35.669668,-78.510089,62,48,35
+"NEH1","Lincoln",40.8604,-96.6159,37,32,22
+"NEH2","Lincoln",NA,NA,18,16,0
+"NYH2","Aurora",42.7326631,-76.6520512,22,15,0
+"NYH3","Aurora",42.732626,-76.6530185,19,12,0
+"OHH1","South Charleston",39.856629,-83.670359,27,18,14
+"SCH1","Pendleton",34.622112,-82.737411,38,38,38

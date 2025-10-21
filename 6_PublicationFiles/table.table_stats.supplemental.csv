@@ -1,0 +1,8 @@
+"","Initial","Rarefied","GxE_Subset"
+"n_samples",602,502,323
+"n_taxa_OTUs",19241,17909,17909
+"total_read_counts",2265108,753000,484500
+"median_read_count_per_sample",3309,1500,1500
+"n_genotypes",117,99,19
+"n_genotypes_with_10_instances",19,19,15
+"n_locations",15,15,10

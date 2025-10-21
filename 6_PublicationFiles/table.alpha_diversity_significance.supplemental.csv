@@ -1,0 +1,7 @@
+"method","comparison","statistic","dr","p.value"
+"Kruskal-Wallis rank sum test","Observed by location",108.261757087381,14,1.21490652744663e-16
+"Kruskal-Wallis rank sum test","Simpson by location",120.254995923498,14,5.60875721917708e-19
+"Kruskal-Wallis rank sum test","Shannon by location",120.246695913413,14,5.62979141116682e-19
+"Kruskal-Wallis rank sum test","Observed by Corrected_pedigree",16.0566496327386,18,0.588593644519836
+"Kruskal-Wallis rank sum test","Simpson by Corrected_pedigree",13.8801496569713,18,0.736870049149125
+"Kruskal-Wallis rank sum test","Shannon by Corrected_pedigree",14.3729230939873,18,0.70447734988631
