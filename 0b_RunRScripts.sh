@@ -16,7 +16,6 @@ set -e
 # Basic data unification and cleaning
 Rscript 1a_UnifyData.r
 Rscript 1b_PlotFieldLocations.r
-Rscript 1c_CalculateOtuTableStats.r > 1_parsed_files/1c_table_stats.txt
 
 # Alpha and beta diversity
 Rscript 2a_AlphaDiversity.r
@@ -26,7 +25,6 @@ Rscript 2d_BetaDiversity_PCOA.r
 
 # GxE Breakdown
 Rscript 3a_FilterSamplesForGxE.r
-Rscript 3a_GetUpdatedTableStats.r > 3_GxE/3a_table_stats.txt
 Rscript 3b_CalcGxE_AlphaDiversity.r
 Rscript 3c_CalcGxE_BetaDiversity.r
 bash 3d_RunPicrust2OnGxEData.sh  # Note: PICRUST2 will not run if output directory already exists
