@@ -45,3 +45,5 @@ Rscript 5b_BetaDiversityAssociation.r
 Rscript 5c_BetaDiversityAssociation_GenotypeLocation.r
 Rscript 5d_PathwayAssociation.r
 
+# Gather results
+bash 6_GatherResultsForPublication.sh
