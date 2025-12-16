@@ -159,13 +159,27 @@ regions = data.frame(region = names(regionkey),
                      region_color=regionkey,
                      latitude =c( 38.5,    40.5,    40.7,   34.0,   0),  # 0 is for "other"
                      longitude=c(-85,  -93.6,      -76,  -79.5,   0))
-  
+
+# Adjust sizes based on number of sites present
+locdists = final %>% select(location, latitude, longitude) %>%
+  column_to_rownames("location") %>%
+  dist() %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  rownames_to_column("loc1") %>%
+  pivot_longer(cols=-loc1, names_to="loc2", values_to="distance")
+to_adjust = locdists %>%
+  filter(distance < 0.1 & loc1 != loc2) # SMall distances that are not to self
+targets = unique(c(to_adjust$loc1, to_adjust$loc2))
+final$size = 3.5
+final$size[final$location %in% targets] = 3.5 * 1.5 # To make bigger
 
 # Final graphic for publication
 pubplot = basemap(mymap, xlim=c(-100, -70), ylim=c(29, 47)) +
-  geom_point(mapping=aes(x=longitude, y=latitude, fill=region), 
-             data=final, size=3.5, shape=21, stroke=0.5) +
+  geom_point(mapping=aes(x=longitude, y=latitude, fill=region, size=size), 
+             data=final, shape=21, stroke=0.5) +
   scale_fill_manual(values=regionkey) +
+  scale_size(range = range(final$size))+  # So doesn't rescale
   geom_text(mapping=aes(x=longitude, y=latitude, label=abbreviation), 
             data=final, color="white", size=1.5, fontface="bold") +
   annotate(geom="label", x=regions$longitude, y=regions$latitude, fill=regions$region_color,
