@@ -54,6 +54,41 @@ combined = cbind(initial.counts, rarefied.counts, gxe.counts)
 write.csv(combined, file=paste(args$outdir, "/", "table.table_stats.supplemental.csv", sep=""), 
           row.names=TRUE)
 
+
+##########
+# Genotype stats
+##########
+
+# Get table of genotypes
+get_genocount = function(mydata, set="UNKNONWN"){
+  tally = sample_data(mydata)$Corrected_pedigree %>% 
+    table() %>%
+    as.data.frame()
+  names(tally) = c("Pedigree", set) # Rename so is dataset
+  return(tally)
+}
+initial.genos = get_genocount(initial, "Initial")
+rarefied.genos = get_genocount(rarefied, "Rarefied")
+gxe.genos = get_genocount(gxe, "GxE_Subset")
+
+# Combine
+outgenos = initial.genos %>%
+  full_join(rarefied.genos, by="Pedigree") %>%
+  full_join(gxe.genos, by="Pedigree")
+
+# Replace & filter
+targets = c("Initial_Samples", "Rarefied_Samples", "GxE_Subset_Samples")
+outfields[,targets][is.na(outfields[,targets])] = 0 # Set missing to 0 
+outfields = subset(outfields, rowSums(outfields[,targets]) > 0) # Remove rows with no samples in any set
+
+# Output
+write.csv(outfields, file=paste(args$outdir, "/", "table.field_stats.supplemental.csv", sep=""), 
+          row.names=FALSE)
+
+
+
+
+
 ##########
 # Location stats
 ##########
@@ -94,3 +129,6 @@ outfields = subset(outfields, rowSums(outfields[,targets]) > 0) # Remove rows wi
 # Output
 write.csv(outfields, file=paste(args$outdir, "/", "table.field_stats.supplemental.csv", sep=""), 
           row.names=FALSE)
+
+
+
