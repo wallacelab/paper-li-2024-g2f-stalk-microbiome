@@ -75,14 +75,10 @@ gxe.genos = get_genocount(gxe, "GxE_Subset")
 outgenos = initial.genos %>%
   full_join(rarefied.genos, by="Pedigree") %>%
   full_join(gxe.genos, by="Pedigree")
-
-# Replace & filter
-targets = c("Initial_Samples", "Rarefied_Samples", "GxE_Subset_Samples")
-outfields[,targets][is.na(outfields[,targets])] = 0 # Set missing to 0 
-outfields = subset(outfields, rowSums(outfields[,targets]) > 0) # Remove rows with no samples in any set
+outgenos[is.na(outgenos)] = 0  # Set missing values from join to 0
 
 # Output
-write.csv(outfields, file=paste(args$outdir, "/", "table.field_stats.supplemental.csv", sep=""), 
+write.csv(outgenos, file=paste(args$outdir, "/", "table.geno_stats.supplemental.csv", sep=""), 
           row.names=FALSE)
 
 
