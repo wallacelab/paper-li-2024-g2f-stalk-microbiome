@@ -10,6 +10,7 @@ library(phyloseq)
 library(qiime2R)
 library(parallel)
 library(ggnewscale)
+#library(ComplexHeatmap)  # For hierarchical clustering
 
 
 # Global variables
@@ -80,7 +81,8 @@ core_microbiome_preparse <- function(tax_level, mydata, collapsed_taxa){
 }
 
 # Plot heatmap
-plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
+plot_heatmap_custom = function(mycore, myrank, xval, outfile, 
+                               plot_all=FALSE, do_clustering=FALSE){
   # Format taxonomy
   taxonomy = str_split_fixed(mycore$Taxaname, ';', n=Inf)
   colnames(taxonomy) = rank_names(asvs)
@@ -107,6 +109,24 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile, plot_all=FALSE){
   if(xlabel=="Corrected_pedigree"){
     xlabel = "Genotype"
   }
+  
+  # HIerarchical clustering
+  if(do_clustering){
+    # Make wide version to cluster
+    mycore_wide = mycore %>%
+        pivot_wider(id_cols=plot_taxon, names_from = xval, values_from = prevalence) %>%
+        column_to_rownames("plot_taxon") %>%
+        as.matrix()
+    clust.rows = dist(mycore_wide) %>% hclust(method = "complete")
+    clust.cols = dist(t(mycore_wide)) %>% hclust(method = "complete")
+    
+    mycore$plot_taxon = factor(mycore$plot_taxon, 
+                               levels=rownames(mycore_wide)[clust.rows$order])
+    mycore$xval = factor(mycore$xval, 
+                               levels=colnames(mycore_wide)[clust.cols$order])
+  }
+  
+  
   
   # Make plot
   #colorscale = c("#000000","#2b2b2b", "#000080","#0000FF")
@@ -184,7 +204,11 @@ locplots = lapply(ranks, function(myrank){
   # More thorough heatmap
   mycore = location_cores_all[[myrank]]
   outfile=paste("4_CoreMicrobiome/4b_location_",myrank,"_core_microbiome_heatmap.all.png", sep="")
-  plot_heatmap_custom(mycore, myrank, xval="location", outfile=outfile, plot_all=TRUE)
+  plot_heatmap_custom(mycore, myrank, xval="location", outfile=outfile, 
+                      plot_all=TRUE)
+  plot_heatmap_custom(mycore, myrank, xval="location", 
+                      outfile=sub(outfile, pattern=".png", repl=".clustered.png"), 
+                      plot_all=TRUE, do_clustering = TRUE)
   
 })
 
@@ -241,7 +265,11 @@ genoplots = lapply(ranks, function(myrank){
   
   mycore = genotype_cores_all[[myrank]]
   outfile=paste("4_CoreMicrobiome/4b_genotype_",myrank,"_core_microbiome_heatmap.all.png", sep="")
-  plot_heatmap_custom(mycore, myrank, xval="Corrected_pedigree", outfile=outfile, plot_all=TRUE)
+  plot_heatmap_custom(mycore, myrank, xval="Corrected_pedigree", outfile=outfile,
+                      plot_all=TRUE)
+  plot_heatmap_custom(mycore, myrank, xval="location", 
+                      outfile=sub(outfile, pattern=".png", repl=".clustered.png"), 
+                      plot_all=TRUE, do_clustering = TRUE)
   
 })
 
