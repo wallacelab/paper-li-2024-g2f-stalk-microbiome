@@ -89,7 +89,6 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile,
   mycore$plot_taxon = taxonomy[,myrank] %>%
     sub(pattern="^ +", repl="") %>% # Remove leading spaces
     gsub(pattern="[dkpcofgs]__", repl="")  # Remove taxon level prefixes
-    
   
   # Set which variable is on X axis
   mycore$xval = mycore[,xval] %>% unlist()
@@ -110,7 +109,23 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile,
     xlabel = "Genotype"
   }
   
-  # HIerarchical clustering
+  # Make sure each taxon has a unique plot label
+  taxa.unique = unique(mycore[,c("taxon", "plot_taxon")])
+  taxa.replace = split(taxa.unique, taxa.unique$plot_taxon) %>% # Replacement key
+    lapply(function(x){
+      if(nrow(x)>1){ # Append identifiers if needed
+        x$plot_taxon = paste(x$plot_taxon, 1:nrow(x))
+      }  
+      return(x)
+    }) %>%
+    bind_rows()
+  updates = setdiff(taxa.replace$plot_taxon, taxa.unique$plot_taxon)
+  if(length(updates)>0){    # Replace labels if needed
+    mycore$plot_taxon=NULL
+    mycore = left_join(mycore, taxa.replace, by="taxon")
+  }
+  
+  # Hierarchical clustering
   if(do_clustering){
     # Make wide version to cluster
     mycore_wide = mycore %>%
@@ -119,9 +134,11 @@ plot_heatmap_custom = function(mycore, myrank, xval, outfile,
         as.matrix()
     clust.rows = dist(mycore_wide) %>% hclust(method = "complete")
     clust.cols = dist(t(mycore_wide)) %>% hclust(method = "complete")
-    
+
+    # Set factors for plotting order
     mycore$plot_taxon = factor(mycore$plot_taxon, 
                                levels=rownames(mycore_wide)[clust.rows$order])
+                               #levels=rowlabels[clust.rows$order])
     mycore$xval = factor(mycore$xval, 
                                levels=colnames(mycore_wide)[clust.cols$order])
   }
@@ -267,7 +284,7 @@ genoplots = lapply(ranks, function(myrank){
   outfile=paste("4_CoreMicrobiome/4b_genotype_",myrank,"_core_microbiome_heatmap.all.png", sep="")
   plot_heatmap_custom(mycore, myrank, xval="Corrected_pedigree", outfile=outfile,
                       plot_all=TRUE)
-  plot_heatmap_custom(mycore, myrank, xval="location", 
+  plot_heatmap_custom(mycore, myrank, xval="Corrected_pedigree", 
                       outfile=sub(outfile, pattern=".png", repl=".clustered.png"), 
                       plot_all=TRUE, do_clustering = TRUE)
   
