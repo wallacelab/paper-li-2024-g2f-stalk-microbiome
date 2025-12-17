@@ -14,8 +14,8 @@ if [ ! -e $pubdir ]; then mkdir $pubdir; fi
 cp 1_parsed_files/1b_g2f_locations.publication.png "$pubdir/figure.location_map.png"
 
 # Figure 2 - Core heatmap
-cp 4_CoreMicrobiome/4b_genotype_Family_core_microbiome_heatmap.all.png "$pubdir/figure.core_families_genotype.png"
-cp 4_CoreMicrobiome/4b_location_Family_core_microbiome_heatmap.all.png "$pubdir/figure.core_families_location.png"
+cp 4_CoreMicrobiome/4b_genotype_Order_core_microbiome_heatmap.all.clustered.png "$pubdir/figure.core_orders_genotype.png"
+cp 4_CoreMicrobiome/4b_location_Order_core_microbiome_heatmap.all.clustered.png "$pubdir/figure.core_orders_location.png"
 
 # Figure 3 - Alpha diversity
 cp 2_Diversity/2a_alpha_diversity.plots.jgw.png "$pubdir/figure.alpha_diversity.png"
