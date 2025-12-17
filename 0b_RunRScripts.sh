@@ -36,6 +36,7 @@ Rscript 3h_TestTaxonomyLevelSignificance.r
 # Core microbiome
 Rscript 4a_CoreMicrobiome.r
 Rscript 4d_SummarizeCoreTaxa.r
+Rscript 4e_GraphCoreTaxaSpread.r
 
 # Environmental associations
 Rscript 5a_AlphaDiversityAssociation.r
