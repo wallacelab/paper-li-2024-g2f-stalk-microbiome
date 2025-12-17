@@ -346,9 +346,9 @@ genotype_cores_output = make_output_table(genotype_cores_all) %>%
   arrange(as.numeric(taxon_level), taxon_name, genotype)
 write.csv(genotype_cores_output, file="4_CoreMicrobiome/4c_prevalence.genotypes.csv", row.names=FALSE)
 
-# Calculate how often is core across locations
-location_summary = summarize_cores(location_cores_output)
-write.csv(location_summary, file="4_CoreMicrobiome/4c_prevalence_summary.genotypes.csv", row.names=FALSE)
+# Calculate how often is core across genotypes
+genotype_summary = summarize_cores(genotype_cores_output)
+write.csv(genotype_summary, file="4_CoreMicrobiome/4c_prevalence_summary.genotypes.csv", row.names=FALSE)
 
 
 # Now need to make the overall table
