@@ -52,19 +52,20 @@ make_heat_tree = function(mydata, hide_threshold=0, outfile="99_tmp.png"){
   # }
   
   # Plot
-  set.seed(1)
+  set.seed(2)
   treeplot = heat_tree(
     mytaxa,
     node_label = labels,
-    #node_label   = taxon_names,           # show taxon names
     node_color   = fraction_core,   # map prevalence to color
-    node_size    = n_subtaxa,             # size by number of descendants (change if desired)
+    node_size    = fraction_core,             # size by prevalence
+    node_color_range = c("#eeeeee","#0000dd"),  # Recolor to match heatmaps
+    #node_size    = n_subtaxa,             # size by number of descendants (change if desired)
     #  node_color_axis_label = "Fraction where is core",
     #node_size_axis_label  = "Number of subtaxa",
-    layout = "davidson-harel", initial_layout = "reingold-tilford",
+    #layout = "davidson-harel", initial_layout = "reingold-tilford",
+    layout = "davidson-harel", #initial_layout = "reingold-tilford",
     title = "Taxonomic prevalence heat tree"
   )
-  
   ggsave(treeplot, file=outfile)
 }
 
@@ -79,3 +80,4 @@ make_heat_tree(genotable, hide_threshold=0.6,
                outfile="4_CoreMicrobiome/4e_prevalence_heat_tree.genotypes.svg")
 make_heat_tree(loctable, hide_threshold=0.6,
                outfile="4_CoreMicrobiome/4e_prevalence_heat_tree.locations.svg")
+
