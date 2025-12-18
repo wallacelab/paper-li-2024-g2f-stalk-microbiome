@@ -16,6 +16,8 @@ cp 1_parsed_files/1b_g2f_locations.publication.png "$pubdir/figure.location_map.
 # Figure 2 - Core heatmap
 cp 4_CoreMicrobiome/4b_genotype_Class_core_microbiome_heatmap.all.clustered.png "$pubdir/figure.core_classes_genotype.png"
 cp 4_CoreMicrobiome/4b_location_Class_core_microbiome_heatmap.all.clustered.png "$pubdir/figure.core_classes_location.png"
+cp 4_CoreMicrobiome/4e_prevalence_heat_tree.genotypes.svg "$pubdir/figure.core_heat_tree_genotype.svg"
+cp 4_CoreMicrobiome/4e_prevalence_heat_tree.locations.svg "$pubdir/figure.core_heat_tree_location.svg"
 
 # Figure 3 - Alpha diversity
 cp 2_Diversity/2a_alpha_diversity.plots.jgw.png "$pubdir/figure.alpha_diversity.png"

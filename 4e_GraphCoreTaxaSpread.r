@@ -68,8 +68,14 @@ make_heat_tree = function(mydata, hide_threshold=0, outfile="99_tmp.png"){
   ggsave(treeplot, file=outfile)
 }
 
+# Make PNGs
 make_heat_tree(genotable, hide_threshold=0.6,
                           outfile="4_CoreMicrobiome/4e_prevalence_heat_tree.genotypes.png")
 make_heat_tree(loctable, hide_threshold=0.6,
                         outfile="4_CoreMicrobiome/4e_prevalence_heat_tree.locations.png")
 
+# Make SVGs
+make_heat_tree(genotable, hide_threshold=0.6,
+               outfile="4_CoreMicrobiome/4e_prevalence_heat_tree.genotypes.svg")
+make_heat_tree(loctable, hide_threshold=0.6,
+               outfile="4_CoreMicrobiome/4e_prevalence_heat_tree.locations.svg")
